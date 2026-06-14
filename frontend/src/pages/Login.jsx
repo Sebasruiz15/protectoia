@@ -78,9 +78,9 @@ const FEATURES = [
 ];
 
 const STATS = [
-  { valor: "+20",  label: "empresas asesoradas" },
-  { valor: "31",   label: "actividades automatizadas" },
-  { valor: "100%", label: "cobertura normativa" },
+  { valor: "+20",  label: "Empresas asesoradas" },
+  { valor: "31",   label: "Actividades automatizadas" },
+  { valor: "100%", label: "Cobertura normativa" },
 ];
 
 // ── Página Login ─────────────────────────────────────────────────
@@ -132,7 +132,7 @@ export function Login() {
             <IconBolt />
           </div>
           <div>
-            <p className="text-sm font-semibold text-white leading-tight">IA System Grup</p>
+            <p className="text-sm font-semibold text-white leading-tight">IA System Group</p>
             <p className="text-[10px] text-blue-200 uppercase tracking-widest">Compliance TIC · Colombia</p>
           </div>
         </div>
@@ -177,7 +177,7 @@ export function Login() {
         </div>
 
         <p className="text-[10px] text-blue-200/40 relative z-10">
-          © {new Date().getFullYear()} IA System Grup · Colombia
+          © {new Date().getFullYear()} IA System Group · Colombia
         </p>
       </div>
 
@@ -191,7 +191,7 @@ export function Login() {
               <IconBolt />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-800">IA System Grup</p>
+              <p className="text-sm font-semibold text-slate-800">IA System Group</p>
               <p className="text-[10px] text-slate-400 uppercase tracking-widest">Compliance TIC · Colombia</p>
             </div>
           </div>
