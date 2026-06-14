@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { RegistroForm }    from "@/components/auth/RegistroForm";
+import { RegistroForm } from "@/components/auth/RegistroForm";
 import { VerificacionOTP } from "@/components/auth/VerificacionOTP";
 
 // ─────────────────────────────────────────────────────────────────
@@ -16,21 +16,40 @@ import { VerificacionOTP } from "@/components/auth/VerificacionOTP";
 // servidor (empresa_id + email) y cambia al estado "verificacion".
 // ─────────────────────────────────────────────────────────────────
 const PASOS = {
-  REGISTRO:     "registro",
+  REGISTRO: "registro",
   VERIFICACION: "verificacion",
 };
 
 // Íconos reutilizables del panel izquierdo
 const IconBolt = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-      d="M13 10V3L4 14h7v7l9-11h-7z" />
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.8}
+      d="M13 10V3L4 14h7v7l9-11h-7z"
+    />
   </svg>
 );
 
 const IconCheck = () => (
-  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+  <svg
+    className="w-3.5 h-3.5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2.5}
+      d="M5 13l4 4L19 7"
+    />
   </svg>
 );
 
@@ -40,8 +59,8 @@ const IconCheck = () => (
 // ─────────────────────────────────────────────────────────────────
 function IndicadorPasos({ pasoActual }) {
   const pasos = [
-    { id: PASOS.REGISTRO,     label: "Datos de la empresa" },
-    { id: PASOS.VERIFICACION, label: "Verificar correo"    },
+    { id: PASOS.REGISTRO, label: "Datos de la empresa" },
+    { id: PASOS.VERIFICACION, label: "Verificar correo" },
   ];
 
   return (
@@ -49,32 +68,49 @@ function IndicadorPasos({ pasoActual }) {
       {pasos.map((paso, idx) => {
         // Un paso está "completado" si ya pasamos de él
         const completado = pasos.findIndex((p) => p.id === pasoActual) > idx;
-        const activo     = pasoActual === paso.id;
+        const activo = pasoActual === paso.id;
 
         return (
-          <div key={paso.id} className="flex items-center gap-2 flex-1 last:flex-none">
+          <div
+            key={paso.id}
+            className="flex items-center gap-2 flex-1 last:flex-none"
+          >
             {/* Círculo del paso */}
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center
+            <div
+              className={`w-7 h-7 rounded-full flex items-center justify-center
                             text-xs font-bold flex-shrink-0 transition-all duration-300
-                            ${completado ? "bg-emerald-500 text-white"
-                              : activo   ? "bg-brand-600 text-white"
-                                         : "bg-slate-200 text-slate-400"}`}>
+                            ${
+                              completado
+                                ? "bg-emerald-500 text-white"
+                                : activo
+                                  ? "bg-brand-600 text-white"
+                                  : "bg-slate-200 text-slate-400"
+                            }`}
+            >
               {/* Si está completado muestra ✓, si no muestra el número */}
               {completado ? <IconCheck /> : idx + 1}
             </div>
 
             {/* Etiqueta del paso */}
-            <span className={`text-xs font-medium whitespace-nowrap
-                              ${completado ? "text-emerald-600"
-                                : activo   ? "text-slate-700"
-                                           : "text-slate-400"}`}>
+            <span
+              className={`text-xs font-medium whitespace-nowrap
+                              ${
+                                completado
+                                  ? "text-emerald-600"
+                                  : activo
+                                    ? "text-slate-700"
+                                    : "text-slate-400"
+                              }`}
+            >
               {paso.label}
             </span>
 
             {/* Línea conectora — no va en el último paso */}
             {idx < pasos.length - 1 && (
-              <div className={`flex-1 h-px transition-colors duration-500
-                               ${completado ? "bg-emerald-400" : "bg-slate-200"}`} />
+              <div
+                className={`flex-1 h-px transition-colors duration-500
+                               ${completado ? "bg-emerald-400" : "bg-slate-200"}`}
+              />
             )}
           </div>
         );
@@ -91,24 +127,24 @@ function IndicadorPasos({ pasoActual }) {
 // ─────────────────────────────────────────────────────────────────
 const PASOS_PROCESO = [
   {
-    num:   "01",
+    num: "01",
     titulo: "Registro en menos de 3 minutos",
-    desc:   "Solo necesitas NIT, correo y datos básicos de tu empresa.",
+    desc: "Solo necesitas NIT, correo y datos básicos de tu empresa.",
   },
   {
-    num:   "02",
+    num: "02",
     titulo: "Selecciona tus servicios regulados",
-    desc:   "Internet, TV o ambos. La plataforma adapta tus obligaciones automáticamente.",
+    desc: "Internet, TV o ambos. La plataforma adapta tus obligaciones automáticamente.",
   },
   {
-    num:   "03",
+    num: "03",
     titulo: "Verificación instantánea",
-    desc:   "Recibirás un código en tu correo para activar la cuenta de inmediato.",
+    desc: "Recibirás un código en tu correo para activar la cuenta de inmediato.",
   },
   {
-    num:   "04",
+    num: "04",
     titulo: "Empieza a cumplir con la IA",
-    desc:   "Desde el primer día tienes el calendario regulatorio y el análisis de documentos activo.",
+    desc: "Desde el primer día tienes el calendario regulatorio y el análisis de documentos activo.",
   },
 ];
 
@@ -136,7 +172,7 @@ export function Registro() {
   // Recibe { token, empresa } que viene del backend
   const handleVerificacionExitosa = (data) => {
     // Guardamos la sesión en localStorage
-    localStorage.setItem("token",   data.token);
+    localStorage.setItem("token", data.token);
     localStorage.setItem("empresa", JSON.stringify(data.empresa));
 
     // Redirigimos según el rol — en registro siempre será "empresa"
@@ -147,33 +183,38 @@ export function Registro() {
 
   return (
     <div className="min-h-screen flex">
-
       {/* ══════════════════════════════════════════
           PANEL IZQUIERDO — solo visible en lg+
           Mismo estilo que el Login para consistencia
       ══════════════════════════════════════════ */}
-      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between
+      <div
+        className="hidden lg:flex lg:w-[52%] flex-col justify-between
                       bg-gradient-to-br from-brand-600 via-brand-700 to-[#021018]
-                      px-14 py-12 relative overflow-hidden">
-
+                      px-14 py-12 relative overflow-hidden"
+      >
         {/* Patrón decorativo de puntos */}
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
-            backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
-            backgroundSize:  "32px 32px",
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
+            backgroundSize: "32px 32px",
           }}
           aria-hidden="true"
         />
 
         {/* Logo */}
         <div className="flex items-center gap-3 relative z-10">
-          <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20
-                          flex items-center justify-center text-white">
+          <div
+            className="w-9 h-9 rounded-xl bg-white/10 border border-white/20
+                          flex items-center justify-center text-white"
+          >
             <IconBolt />
           </div>
           <div>
-            <p className="text-sm font-semibold text-white leading-tight">IA System Grup</p>
+            <p className="text-sm font-semibold text-white leading-tight">
+              IA System Grup
+            </p>
             <p className="text-[10px] text-blue-200 uppercase tracking-widest">
               Compliance TIC · Colombia
             </p>
@@ -184,7 +225,8 @@ export function Registro() {
         <div className="relative z-10 space-y-10">
           <div>
             <h2 className="text-3xl font-bold text-white leading-snug max-w-sm">
-              Empieza a cumplir<br />
+              Empieza a cumplir
+              <br />
               <span className="text-blue-300">desde el primer día</span>
             </h2>
             <p className="mt-3 text-sm text-blue-100/80 leading-relaxed max-w-xs">
@@ -203,7 +245,9 @@ export function Registro() {
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-white">{p.titulo}</p>
-                  <p className="text-xs text-blue-100/70 mt-0.5 leading-relaxed">{p.desc}</p>
+                  <p className="text-xs text-blue-100/70 mt-0.5 leading-relaxed">
+                    {p.desc}
+                  </p>
                 </div>
               </li>
             ))}
@@ -212,8 +256,8 @@ export function Registro() {
           {/* Testimonial simple */}
           <div className="border-l-2 border-blue-400/40 pl-4">
             <p className="text-sm text-blue-100/80 italic leading-relaxed">
-              "Antes tardábamos 3 días en preparar los reportes HECAA.
-              Ahora los tenemos listos en minutos."
+              "Antes tardábamos 3 días en preparar los reportes HECAA. Ahora los
+              tenemos listos en minutos."
             </p>
             <p className="text-xs text-blue-300/60 mt-2">
               — Operador TIC · Antioquia
@@ -229,19 +273,23 @@ export function Registro() {
       {/* ══════════════════════════════════════════
           PANEL DERECHO — formulario y OTP
       ══════════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col items-center justify-center
-                      bg-slate-50 px-6 py-12">
-
+      <div
+        className="flex-1 flex flex-col items-center justify-center
+                      bg-slate-50 px-6 py-12"
+      >
         <div className="w-full max-w-md space-y-6">
-
           {/* Logo visible solo en móvil */}
           <div className="flex items-center gap-3 lg:hidden">
-            <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center
-                            justify-center text-white shadow-sm">
+            <div
+              className="w-9 h-9 rounded-xl bg-brand-600 flex items-center
+                            justify-center text-white shadow-sm"
+            >
               <IconBolt />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-800">IA System Grup</p>
+              <p className="text-sm font-semibold text-slate-800">
+                IA System Grup
+              </p>
               <p className="text-[10px] text-slate-400 uppercase tracking-widest">
                 Compliance TIC · Colombia
               </p>
@@ -296,10 +344,8 @@ export function Registro() {
               Inicia sesión
             </Link>
           </p>
-
         </div>
       </div>
-
     </div>
   );
 }
