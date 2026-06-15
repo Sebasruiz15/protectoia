@@ -1,52 +1,61 @@
 // archivo: src/main.jsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// Estilos globales — siempre primero
-import './index.css';
+import { Login        } from "@/pages/Login";
+import { Registro     } from "@/pages/Registro";
+import { PortalEmpresa } from "@/pages/PortalEmpresa";
+import { Dashboard    } from "@/pages/Dashboard";
 
-// Páginas públicas (auth)
-import { Login }    from '@/pages/Login';
-import { Registro } from '@/pages/Registro';
+import "./index.css";
 
-// Páginas privadas — las construimos en los siguientes archivos
-// import { PortalEmpresa } from '@/pages/PortalEmpresa';
-// import { PanelAdmin }   from '@/pages/PanelAdmin';
-
-/*
-  Guardia de ruta simple — en el siguiente paso la mejoramos con contexto de auth.
-  Por ahora redirige al login si no hay token en localStorage.
-*/
-function RutaPrivada({ children }) {
-  const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" replace />;
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+createRoot(document.getElementById("root")).render(
+  <StrictMode>
     <BrowserRouter>
       <Routes>
-        {/* Redirige la raíz al login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-
-        {/* Rutas públicas */}
+        {/* Públicas */}
         <Route path="/login"    element={<Login />} />
         <Route path="/registro" element={<Registro />} />
 
-        {/* Rutas privadas — se descomentan al ir construyendo */}
-        {/*
-        <Route path="/portal" element={
-          <RutaPrivada><PortalEmpresa /></RutaPrivada>
-        } />
-        <Route path="/admin" element={
-          <RutaPrivada><PanelAdmin /></RutaPrivada>
-        } />
-        */}
+        {/* Portal — rutas protegidas */}
+        <Route path="/portal" element={<PortalEmpresa />}>
+          <Route index element={<Dashboard />} />
 
-        {/* Catch-all: cualquier ruta no encontrada va al login */}
+          {/* Reportes — placeholders por ahora */}
+          <Route path="reportes/t12" element={<Placeholder titulo="Formato T.1.2 — ISP" />} />
+          <Route path="reportes/t11" element={<Placeholder titulo="Formato T.1.1 — ISP Empresarial" />} />
+          <Route path="reportes/f7"  element={<Placeholder titulo="Formato 7 — Televisión" />} />
+
+          {/* Otras secciones */}
+          <Route path="calendario" element={<Placeholder titulo="Calendario regulatorio" />} />
+          <Route path="empresa"    element={<Placeholder titulo="Mi empresa" />} />
+        </Route>
+
+        {/* Raíz → login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
-  </React.StrictMode>
+  </StrictMode>
 );
+
+// ── Placeholder temporal para secciones en construcción ───────────
+function Placeholder({ titulo }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <h1 className="text-xl font-semibold text-white">{titulo}</h1>
+      <div
+        className="rounded-2xl p-10 flex items-center justify-center"
+        style={{
+          background: "rgba(255,255,255,0.02)",
+          border:     "1px solid rgba(255,255,255,0.06)",
+          minHeight:  "300px",
+        }}
+      >
+        <p className="text-sm" style={{ color: "rgba(147,197,253,0.4)" }}>
+          Módulo en construcción — próximamente
+        </p>
+      </div>
+    </div>
+  );
+}
