@@ -382,7 +382,21 @@ export function Registro() {
         </div>
 
         <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>
-          © {new Date().getFullYear()} IA System Group · Colombia
+          © {new Date().getFullYear()} Gesco IA · Colombia · Diseñado y
+          desarrollado por{" "}
+          <a
+            href="https://cv-sebastian-mu.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors"
+            style={{ color: "rgba(255,255,255,0.4)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#f4e409")}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "rgba(255,255,255,0.4)")
+            }
+          >
+            JS.dev
+          </a>
         </p>
       </div>
 
