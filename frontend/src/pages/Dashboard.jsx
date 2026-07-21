@@ -18,7 +18,7 @@ const OB_COMPLETADAS = [
 const ACTIVIDAD = [
   { ic: "✓", c: "#34d399", bg: "rgba(52,211,153,0.12)", t: "T.1.2 cargado en HECAA", s: "Hace 2 días" },
   { ic: "✓", c: "#34d399", bg: "rgba(52,211,153,0.12)", t: "Compensación TV 1T pagada", s: "Hace 7 semanas" },
-  { ic: "↑", c: "#5EA1DD", bg: "rgba(56,136,211,0.12)", t: "FUTIC mayo 2026 liquidado", s: "Hace 1 mes" },
+  { ic: "↑", c: "#f4e409", bg: "rgba(244,228,9,0.12)", t: "FUTIC mayo 2026 liquidado", s: "Hace 1 mes" },
 ];
 
 const GRAFICA = [
@@ -58,10 +58,11 @@ const C = {
     fontSize: "9px",
     fontWeight: "600",
     letterSpacing: "0.09em",
-    color: "rgba(147,197,253,0.4)",
+    color: "rgba(255,255,255,0.4)",
     textTransform: "uppercase",
     display: "block",
     marginBottom: "6px",
+    fontFamily: '"IBM Plex Mono", monospace',
   },
 };
 
@@ -69,7 +70,7 @@ function Badge({ children, color }) {
   const p = {
     green: ["rgba(52,211,153,0.15)", "rgba(52,211,153,0.3)", "#34d399"],
     amber: ["rgba(251,191,36,0.15)", "rgba(251,191,36,0.3)", "#fbbf24"],
-    blue: ["rgba(56,136,211,0.15)", "rgba(56,136,211,0.3)", "#93c5fd"],
+    blue: ["rgba(244,228,9,0.15)", "rgba(244,228,9,0.3)", "#f4e409"],
   }[color];
   return (
     <span style={{ fontSize: "9px", fontWeight: "600", padding: "2px 7px", borderRadius: "20px", background: p[0], border: `0.5px solid ${p[1]}`, color: p[2] }}>
@@ -101,7 +102,7 @@ function FilaOb({ ob, done }) {
         <p style={{ fontSize: "11px", fontWeight: "500", color: "rgba(255,255,255,0.85)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {ob.nombre}
         </p>
-        <p style={{ fontSize: "9px", color: "rgba(147,197,253,0.4)", marginTop: "1px" }}>
+        <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", marginTop: "1px" }}>
           {done ? `✓ ${ob.fecha}` : `Vence ${ob.fecha}`} · {ob.entidad}
         </p>
       </div>
@@ -120,11 +121,11 @@ function Calendario() {
   const ESP_JUL = { 15: "vence", 31: "critico" };
 
   const s = {
-    normal: ["rgba(147,197,253,0.4)", "transparent"],
-    hoy: ["white", "rgba(24,95,165,0.4)"],
+    normal: ["rgba(255,255,255,0.4)", "transparent"],
+    hoy: ["#0b1830", "rgba(244,228,9,0.85)"],
     vence: ["#fbbf24", "rgba(251,191,36,0.15)"],
     critico: ["#f87171", "rgba(248,113,113,0.15)"],
-    opaco: ["rgba(147,197,253,0.15)", "transparent"],
+    opaco: ["rgba(255,255,255,0.15)", "transparent"],
   };
 
   const Dia = ({ n, t = "normal" }) => (
@@ -138,8 +139,8 @@ function Calendario() {
       <span style={C.label}>Jun · Jul 2026</span>
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "6px" }}>
-        {[["#185FA5", "Hoy"], ["#fbbf24", "Vence"], ["#f87171", "Crítico"]].map(([c, l]) => (
-          <span key={l} style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "8px", color: "rgba(147,197,253,0.45)" }}>
+        {[["#f4e409", "Hoy"], ["#fbbf24", "Vence"], ["#f87171", "Crítico"]].map(([c, l]) => (
+          <span key={l} style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "8px", color: "rgba(255,255,255,0.45)" }}>
             <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: c, display: "inline-block" }} />
             {l}
           </span>
@@ -148,7 +149,7 @@ function Calendario() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: "2px" }}>
         {DIAS.map((d) => (
-          <div key={d} style={{ fontSize: "8px", color: "rgba(147,197,253,0.3)", textAlign: "center", paddingBottom: "2px" }}>{d}</div>
+          <div key={d} style={{ fontSize: "8px", color: "rgba(255,255,255,0.3)", textAlign: "center", paddingBottom: "2px" }}>{d}</div>
         ))}
         {Array.from({ length: OFFSET }).map((_, i) => <div key={`e${i}`} />)}
         {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
@@ -180,8 +181,8 @@ function Grafica() {
       {/* Barras */}
       <div style={{ flex: 1 }}>
         <div style={{ display: "flex", gap: "10px", marginBottom: "6px" }}>
-          {[["rgba(56,136,211,0.7)", "Ingresos ISP"], ["rgba(52,211,153,0.65)", "FUTIC"]].map(([c, l]) => (
-            <span key={l} style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "9px", color: "rgba(147,197,253,0.5)" }}>
+          {[["rgba(244,228,9,0.7)", "Ingresos ISP"], ["rgba(52,211,153,0.65)", "FUTIC"]].map(([c, l]) => (
+            <span key={l} style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "9px", color: "rgba(255,255,255,0.5)" }}>
               <span style={{ width: "7px", height: "7px", borderRadius: "2px", background: c, display: "inline-block" }} />
               {l}
             </span>
@@ -194,8 +195,8 @@ function Grafica() {
 
           {/* Línea media */}
           <line x1="32" y1={H * 0.5} x2="278" y2={H * 0.5} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-          <text x="30" y={H * 0.5 + 3} textAnchor="end" fontSize="7" fill="rgba(147,197,253,0.35)">$12M</text>
-          <text x="30" y={H + 3} textAnchor="end" fontSize="7" fill="rgba(147,197,253,0.35)">$0</text>
+          <text x="30" y={H * 0.5 + 3} textAnchor="end" fontSize="7" fill="rgba(255,255,255,0.35)">$12M</text>
+          <text x="30" y={H + 3} textAnchor="end" fontSize="7" fill="rgba(255,255,255,0.35)">$0</text>
 
           {datos.map((d, i) => {
             const x = 40 + i * 60;
@@ -206,10 +207,10 @@ function Grafica() {
               <g key={d.t}>
                 {/* Barra ingresos */}
                 <rect x={x} y={H - aI} width="18" height={aI} rx="3"
-                  fill="rgba(56,136,211,0.65)" />
+                  fill="rgba(244,228,9,0.65)" />
                 {/* Valor encima */}
                 <text x={x + 9} y={H - aI - 3} textAnchor="middle" fontSize="7"
-                  fill="rgba(147,197,253,0.5)">${d.i}M</text>
+                  fill="rgba(255,255,255,0.5)">${d.i}M</text>
 
                 {/* Barra FUTIC */}
                 <rect x={x + 22} y={H - aF} width="18" height={aF} rx="3"
@@ -220,7 +221,7 @@ function Grafica() {
 
                 {/* Label trimestre */}
                 <text x={x + 19} y={H + 12} textAnchor="middle" fontSize="8"
-                  fill="rgba(147,197,253,0.4)">{d.t}</text>
+                  fill="rgba(255,255,255,0.4)">{d.t}</text>
               </g>
             );
           })}
@@ -231,8 +232,8 @@ function Grafica() {
       <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", gap: "4px", paddingTop: "20px" }}>
         {datos.map((d) => (
           <div key={d.t} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "10px" }}>
-            <span style={{ color: "rgba(147,197,253,0.4)", width: "32px" }}>{d.t}</span>
-            <span style={{ color: "rgba(56,136,211,0.9)", width: "40px" }}>${d.i}M</span>
+            <span style={{ color: "rgba(255,255,255,0.4)", width: "32px" }}>{d.t}</span>
+            <span style={{ color: "rgba(244,228,9,0.9)", width: "40px" }}>${d.i}M</span>
             <span style={{ color: "rgba(52,211,153,0.8)" }}>${(d.f * 1000).toFixed(0)}K</span>
           </div>
         ))}
@@ -265,11 +266,11 @@ function Dona() {
             strokeDasharray={`${a.dash} ${a.gap}`} transform={`rotate(${a.rot} ${CX} ${CY})`} />
         ))}
         <text x={CX} y={CY - 2} textAnchor="middle" fontSize="10" fontWeight="500" fill="white">75%</text>
-        <text x={CX} y={CY + 8} textAnchor="middle" fontSize="6" fill="rgba(147,197,253,0.5)">al día</text>
+        <text x={CX} y={CY + 8} textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.5)">al día</text>
       </svg>
       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
         {datos.map((d) => (
-          <div key={d.l} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", color: "rgba(147,197,253,0.6)" }}>
+          <div key={d.l} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", color: "rgba(255,255,255,0.6)" }}>
             <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: d.c, flexShrink: 0 }} />
             {d.l} · {d.p}%
           </div>
@@ -283,11 +284,11 @@ function Dona() {
 function Accion({ ic, label, to }) {
   return (
     <a href={to} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: "0.5px solid rgba(255,255,255,0.07)", textDecoration: "none", transition: "all 0.15s" }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(24,95,165,0.2)"; e.currentTarget.style.borderColor = "rgba(56,136,211,0.35)"; }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(244,228,9,0.2)"; e.currentTarget.style.borderColor = "rgba(244,228,9,0.35)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
     >
       <span style={{ fontSize: "14px" }}>{ic}</span>
-      <span style={{ fontSize: "11px", color: "rgba(147,197,253,0.7)", fontWeight: "500" }}>{label}</span>
+      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)", fontWeight: "500" }}>{label}</span>
     </a>
   );
 }
@@ -310,7 +311,7 @@ export function Dashboard() {
           <h1 style={{ fontSize: "16px", fontWeight: "500", color: "white" }}>
             Bienvenido, {empresa.razon_social ?? "Empresa"} 👋
           </h1>
-          <p style={{ fontSize: "11px", color: "rgba(147,197,253,0.45)", marginTop: "2px" }}>
+          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>
             Resumen regulatorio · 2T 2026 · {empresa.tipo_isp === "ISP_TV" ? "Internet + TV" : "Internet"}
           </p>
         </div>
@@ -341,14 +342,14 @@ export function Dashboard() {
         <div style={C.card}>
           <span style={C.label}>Reportes generados</span>
           <p style={{ fontSize: "20px", fontWeight: "500", color: "white" }}>{activo ? "5" : "—"}</p>
-          <Progreso pct={50} color="#5EA1DD" delay={400} />
+          <Progreso pct={50} color="#f4e409" delay={400} />
           <div style={{ marginTop: "5px" }}><Badge color="blue">T.1.2 + F.7</Badge></div>
         </div>
 
         <div style={C.card}>
           <span style={C.label}>FUTIC estimado</span>
           <p style={{ fontSize: "16px", fontWeight: "500", color: "white" }}>${futic.toLocaleString("es-CO")}</p>
-          <p style={{ fontSize: "10px", color: "rgba(147,197,253,0.35)", marginTop: "4px" }}>Jun 2026</p>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", marginTop: "4px" }}>Jun 2026</p>
         </div>
       </div>
 
@@ -361,7 +362,7 @@ export function Dashboard() {
 
           <div style={{ display: "flex", gap: "2px", background: "rgba(255,255,255,0.04)", borderRadius: "7px", padding: "2px", marginBottom: "8px" }}>
             {["pendientes", "completadas"].map((t) => (
-              <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: "4px", border: tab === t ? "0.5px solid rgba(56,136,211,0.35)" : "0.5px solid transparent", borderRadius: "5px", fontSize: "10px", fontWeight: "500", cursor: "pointer", background: tab === t ? "rgba(24,95,165,0.35)" : "transparent", color: tab === t ? "white" : "rgba(147,197,253,0.5)", transition: "all 0.15s" }}>
+              <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: "4px", border: tab === t ? "0.5px solid rgba(244,228,9,0.35)" : "0.5px solid transparent", borderRadius: "5px", fontSize: "10px", fontWeight: "500", cursor: "pointer", background: tab === t ? "rgba(244,228,9,0.35)" : "transparent", color: tab === t ? "white" : "rgba(255,255,255,0.5)", transition: "all 0.15s" }}>
                 {t === "pendientes" ? "Pendientes" : "Completadas"}
               </button>
             ))}
@@ -431,7 +432,7 @@ export function Dashboard() {
                   <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.8)", fontWeight: "500" }}>
                     {a.t}
                   </p>
-                  <p style={{ fontSize: "9px", color: "rgba(147,197,253,0.35)", marginTop: "2px" }}>
+                  <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>
                     {a.s}
                   </p>
                 </div>
@@ -444,13 +445,13 @@ export function Dashboard() {
             <span style={C.label}>Resumen trimestral</span>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
               {[
-                { label: "FUTIC total 2026", valor: "$796K", color: "#5EA1DD" },
-                { label: "TV compensación", valor: "$360K", color: "#93c5fd" },
+                { label: "FUTIC total 2026", valor: "$796K", color: "#f4e409" },
+                { label: "TV compensación", valor: "$360K", color: "#fdf59e" },
                 { label: "Reportes CRC", valor: "2", color: "#34d399" },
                 { label: "Reportes MinTIC", valor: "2", color: "#34d399" },
               ].map((s) => (
                 <div key={s.label} style={{ background: "rgba(255,255,255,0.02)", borderRadius: "7px", padding: "6px 8px" }}>
-                  <p style={{ fontSize: "9px", color: "rgba(147,197,253,0.4)", marginBottom: "3px" }}>{s.label}</p>
+                  <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", marginBottom: "3px" }}>{s.label}</p>
                   <p style={{ fontSize: "13px", fontWeight: "500", color: s.color }}>{s.valor}</p>
                 </div>
               ))}
@@ -460,4 +461,4 @@ export function Dashboard() {
       </div>
     </div>
   );
-} 
+}

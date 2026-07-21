@@ -60,6 +60,12 @@ const TIPOS_ISP = [
     desc:    "Residencial, empresarial y TV por suscripción",
     formato: "T.1.1 + T.1.2 + F.7",
   },
+  {
+    valor:   "COMUNITARIO",
+    label:   "TV y/o Internet comunitario",
+    desc:    "Comunidad organizada sin ánimo de lucro (TV comunitaria / ICF)",
+    formato: "F.1 + T.1.10",
+  },
 ];
 
 // ── Tokens de estilo compartidos ──────────────────────────────────
@@ -91,17 +97,18 @@ const S = {
     fontSize:      "10px",
     fontWeight:    "600",
     letterSpacing: "0.08em",
-    color:         "rgba(147,197,253,0.7)",
+    color:         "rgba(255,255,255,0.7)",
     marginBottom:  "6px",
   },
   sectionTitle: {
     fontSize:      "10px",
     fontWeight:    "700",
     letterSpacing: "0.1em",
-    color:         "rgba(147,197,253,0.4)",
+    color:         "rgba(255,255,255,0.4)",
     marginBottom:  "12px",
     paddingBottom: "8px",
     borderBottom:  "1px solid rgba(255,255,255,0.06)",
+    fontFamily:    '"IBM Plex Mono", monospace',
   },
 };
 
@@ -154,7 +161,7 @@ function Input({ register, name, type = "text", placeholder, error, extraStyle =
       onFocus={(e) => {
         e.target.style.borderColor = error
           ? "rgba(248,113,113,0.8)"
-          : "rgba(56,136,211,0.6)";
+          : "rgba(244,228,9,0.55)";
       }}
       onBlur={(e) => {
         e.target.style.borderColor = error
@@ -179,10 +186,10 @@ function SelectorISP({ value, onChange, error }) {
             className="w-full text-left rounded-xl px-4 py-3 transition-all duration-150"
             style={{
               background: sel
-                ? "rgba(24,95,165,0.2)"
+                ? "rgba(244,228,9,0.15)"
                 : "rgba(255,255,255,0.03)",
               border: sel
-                ? "1px solid rgba(56,136,211,0.55)"
+                ? "1px solid rgba(244,228,9,0.5)"
                 : error
                 ? "1px solid rgba(248,113,113,0.3)"
                 : "1px solid rgba(255,255,255,0.08)",
@@ -194,15 +201,15 @@ function SelectorISP({ value, onChange, error }) {
                 <div
                   className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center"
                   style={{
-                    border:     sel ? "1px solid #3888D3" : "1px solid rgba(255,255,255,0.2)",
-                    background: sel ? "rgba(56,136,211,0.15)" : "transparent",
+                    border:     sel ? "1px solid #f4e409" : "1px solid rgba(255,255,255,0.2)",
+                    background: sel ? "rgba(244,228,9,0.15)" : "transparent",
                     flexShrink: 0,
                   }}
                 >
                   {sel && (
                     <div
                       className="w-2 h-2 rounded-full"
-                      style={{ background: "#3888D3" }}
+                      style={{ background: "#f4e409" }}
                     />
                   )}
                 </div>
@@ -217,7 +224,7 @@ function SelectorISP({ value, onChange, error }) {
                   </p>
                   <p
                     className="text-xs mt-0.5"
-                    style={{ color: "rgba(147,197,253,0.45)" }}
+                    style={{ color: "rgba(255,255,255,0.45)" }}
                   >
                     {tipo.desc}
                   </p>
@@ -228,9 +235,9 @@ function SelectorISP({ value, onChange, error }) {
               <span
                 className="text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap"
                 style={{
-                  background: sel ? "rgba(56,136,211,0.2)"  : "rgba(255,255,255,0.04)",
-                  border:     sel ? "1px solid rgba(56,136,211,0.4)" : "1px solid rgba(255,255,255,0.07)",
-                  color:      sel ? "#93c5fd" : "rgba(147,197,253,0.35)",
+                  background: sel ? "rgba(244,228,9,0.15)" : "rgba(255,255,255,0.04)",
+                  border:     sel ? "1px solid rgba(244,228,9,0.35)" : "1px solid rgba(255,255,255,0.07)",
+                  color:      sel ? "#f4e409" : "rgba(255,255,255,0.35)",
                 }}
               >
                 {tipo.formato}
@@ -335,7 +342,7 @@ export function RegistroForm({ onExito }) {
       <div>
         <p style={S.sectionTitle}>TIPO DE OPERADOR</p>
         <p className="text-xs mb-3 leading-relaxed"
-          style={{ color: "rgba(147,197,253,0.45)" }}>
+          style={{ color: "rgba(255,255,255,0.45)" }}>
           Define qué formatos regulatorios debes reportar ante la CRC y MinTIC.
         </p>
         <SelectorISP
@@ -381,7 +388,7 @@ export function RegistroForm({ onExito }) {
             </Campo>
           </div>
 
-          <p className="text-xs" style={{ color: "rgba(147,197,253,0.3)" }}>
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
             Mínimo 8 caracteres, una mayúscula y un número.
           </p>
         </div>
@@ -391,10 +398,10 @@ export function RegistroForm({ onExito }) {
       <button
         type="submit"
         disabled={cargando}
-        className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-        style={{ background: "#185FA5" }}
-        onMouseEnter={(e) => { if (!cargando) e.currentTarget.style.background = "#0C447C"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = "#185FA5"; }}
+        className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+        style={{ background: "#f4e409", color: "#0b1830" }}
+        onMouseEnter={(e) => { if (!cargando) e.currentTarget.style.transform = "translateY(-1px)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
       >
         {cargando ? <><IconSpinner /> Creando cuenta…</> : "Crear cuenta"}
       </button>

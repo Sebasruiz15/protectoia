@@ -13,6 +13,14 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /*
+    .font-display — Space Grotesk para títulos (h1/h2 de hero, login, dashboard).
+    Mismo par tipográfico que GESCO: Space Grotesk + Inter.
+  */
+  .font-display {
+    font-family: '"Space Grotesk"', system-ui, sans-serif;
+  }
+
   /* Elimina las flechas de inputs type="number" */
   input[type='number']::-webkit-inner-spin-button,
   input[type='number']::-webkit-outer-spin-button {

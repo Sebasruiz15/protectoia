@@ -3,7 +3,7 @@ import axios from "axios";
 
 // ── Cliente HTTP ──────────────────────────────────────────────────
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:3001/api",
   timeout: 10_000,
 });
 
@@ -16,18 +16,18 @@ api.interceptors.request.use((config) => {
 
 // ── Usuario demo (mock local) ─────────────────────────────────────
 const DEMO = {
-  email:    "demo@iasystemgroup.co",
+  email: "demo@iasystemgroup.co",
   password: "Demo2026*",
-  token:    "demo-token-local",
+  token: "demo-token-local",
   empresa: {
-    id:          "demo-001",
+    id: "demo-001",
     razon_social: "HSE Ingeniería S.A.S.",
-    nit:          "900.437.268-8",
-    tipo_isp:     "ISP_TV",
-    rep_legal:    "Isabel Mercedes C. Descance",
-    email:        "demo@iasystemgroup.co",
-    rol:          "empresa",
-    municipio:    "Amagá, Antioquia",
+    nit: "900.437.268-8",
+    tipo_isp: "ISP_TV",
+    rep_legal: "Isabel Mercedes C. Descance",
+    email: "demo@iasystemgroup.co",
+    rol: "empresa",
+    municipio: "Amagá, Antioquia",
   },
 };
 
@@ -37,12 +37,12 @@ api.interceptors.response.use(
   (err) => {
     // Si no hay respuesta del servidor, revisamos si es el demo
     const config = err.config ?? {};
-    const body   = JSON.parse(config.data ?? "{}");
+    const body = JSON.parse(config.data ?? "{}");
 
     // Mock login demo
     if (
       config.url?.includes("/auth/login") &&
-      body.email    === DEMO.email &&
+      body.email === DEMO.email &&
       body.password === DEMO.password
     ) {
       return Promise.resolve({
@@ -50,15 +50,15 @@ api.interceptors.response.use(
       });
     }
 
-    const res     = err.response ?? {};
-    const data    = res.data    ?? {};
-    const status  = res.status  ?? 0;
+    const res = err.response ?? {};
+    const data = res.data ?? {};
+    const status = res.status ?? 0;
 
     return Promise.reject({
       mensaje: data.mensaje ?? data.message ?? "Error de conexión.",
       status,
-      campos:  data.campos  ?? [],
+      campos: data.campos ?? [],
       data,
     });
-  }
+  },
 );
