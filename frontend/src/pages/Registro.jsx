@@ -311,7 +311,7 @@ export function Registro() {
           </div>
           <div>
             <p className="text-sm font-semibold text-white leading-tight">
-              IA System Group
+              Gesco IA
             </p>
             <p className="text-[10px] uppercase tracking-widest font-mono"
               style={{ color: "rgba(255,255,255,0.7)" }}>
@@ -426,7 +426,7 @@ export function Registro() {
               <IconLogoMark />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">IA System Group</p>
+              <p className="text-sm font-semibold text-white">Gesco IA</p>
               <p className="text-[10px] uppercase tracking-widest font-mono"
                 style={{ color: "rgba(255,255,255,0.6)" }}>
                 Compliance TIC · Colombia

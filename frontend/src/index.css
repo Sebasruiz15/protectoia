@@ -95,3 +95,171 @@
   .badge-info { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-brand-50 text-brand-600; }
   .badge-gray { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500; }
 }
+
+/* ── Variables de tema ─────────────────────────────────────────── */
+:root[data-theme="dark"] {
+  --bg-base:        #021018;
+  --bg-card:        rgba(255,255,255,0.03);
+  --bg-card-hover:  rgba(255,255,255,0.06);
+  --bg-input:       rgba(255,255,255,0.05);
+  --bg-sidebar:     #021018;
+  --bg-topbar:      #021018;
+  --bg-overlay:     rgba(2,16,24,0.92);
+
+  --border-card:    rgba(255,255,255,0.08);
+  --border-input:   rgba(255,255,255,0.1);
+  --border-sidebar: rgba(255,255,255,0.06);
+
+  --text-primary:   #ffffff;
+  --text-secondary: rgba(147,197,253,0.7);
+  --text-muted:     rgba(147,197,253,0.4);
+  --text-hint:      rgba(147,197,253,0.25);
+
+  --accent:         #185FA5;
+  --accent-hover:   #0C447C;
+  --accent-soft:    rgba(24,95,165,0.2);
+  --accent-border:  rgba(56,136,211,0.3);
+
+  --node-color:     #3888D3;
+  --node-line:      rgba(56,136,211,0.22);
+}
+
+:root[data-theme="light"] {
+  --bg-base:        #f0f4f8;
+  --bg-card:        #ffffff;
+  --bg-card-hover:  #f8fafc;
+  --bg-input:       #ffffff;
+  --bg-sidebar:     #0C2340;
+  --bg-topbar:      #ffffff;
+  --bg-overlay:     rgba(240,244,248,0.95);
+
+  --border-card:    rgba(0,0,0,0.08);
+  --border-input:   rgba(0,0,0,0.12);
+  --border-sidebar: rgba(255,255,255,0.1);
+
+  --text-primary:   #0a1628;
+  --text-secondary: #2d5a8e;
+  --text-muted:     #64748b;
+  --text-hint:      #94a3b8;
+
+  --accent:         #185FA5;
+  --accent-hover:   #0C447C;
+  --accent-soft:    rgba(24,95,165,0.08);
+  --accent-border:  rgba(24,95,165,0.2);
+
+  --node-color:     #185FA5;
+  --node-line:      rgba(24,95,165,0.15);
+}
+
+/* ── Transición suave al cambiar tema ──────────────────────────── */
+*, *::before, *::after {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.15s ease;
+}
+
+/* ── Aplicar variables globalmente ─────────────────────────────── */
+body {
+  background: var(--bg-base);
+  color:      var(--text-primary);
+}
+
+/* ── Inputs y selects adaptativos ──────────────────────────────── */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  color-scheme: light;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color-scheme: dark;
+}
+
+/* ── Scrollbar adaptativa ──────────────────────────────────────── */
+[data-theme="dark"] ::-webkit-scrollbar-track  { background: #021018; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb  { background: rgba(56,136,211,0.3); border-radius: 4px; }
+[data-theme="light"] ::-webkit-scrollbar-track { background: #e2e8f0; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(24,95,165,0.3); border-radius: 4px; }
+::-webkit-scrollbar { width: 5px; }
+
+/* ── Placeholders adaptativos ──────────────────────────────────── */
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: rgba(147,197,253,0.35);
+}
+
+/* ── Selects en modo claro ─────────────────────────────────────── */
+[data-theme="light"] select option {
+  background: white;
+  color: #0a1628;
+}
+
+/* ── Tabla en modo claro ───────────────────────────────────────── */
+[data-theme="light"] table th {
+  color: #64748b !important;
+  border-bottom-color: rgba(0,0,0,0.08) !important;
+}
+
+[data-theme="light"] table td {
+  border-bottom-color: rgba(0,0,0,0.05) !important;
+  color: #0a1628;
+}
+
+/* ── Cards info azules ─────────────────────────────────────────── */
+[data-theme="light"] .info-card-blue {
+  background: rgba(24,95,165,0.06) !important;
+  border-color: rgba(24,95,165,0.15) !important;
+}
+
+[data-theme="light"] .info-card-blue p {
+  color: #2d5a8e !important;
+}
+
+/* ── Badges y pills en modo claro ──────────────────────────────── */
+[data-theme="light"] .badge-pendiente {
+  color: #92400e;
+  background: rgba(251,191,36,0.15);
+}
+
+/* ── Topbar y sidebar bordes en modo claro ─────────────────────── */
+[data-theme="light"] header {
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+}
+
+/* ── Scrollbar modo claro ──────────────────────────────────────── */
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(24,95,165,0.2);
+}
+
+/* ── Indicador de pasos en modo claro ──────────────────────────── */
+[data-theme="light"] .paso-inactivo {
+  background: rgba(0,0,0,0.06) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  color: #64748b !important;
+}
+
+/* ── Botón secundario en modo claro ────────────────────────────── */
+[data-theme="light"] button:not([style*="185FA5"]):not([style*="0F6E56"]) {
+  color: #2d5a8e;
+}
+
+/* ── Input focus en modo claro ─────────────────────────────────── */
+[data-theme="light"] input:focus,
+[data-theme="light"] select:focus {
+  border-color: rgba(24,95,165,0.5) !important;
+  box-shadow: 0 0 0 3px rgba(24,95,165,0.08);
+}
+
+/* ── Fila hover tabla modo claro ───────────────────────────────── */
+[data-theme="light"] tbody tr:hover {
+  background: rgba(0,0,0,0.02) !important;
+}

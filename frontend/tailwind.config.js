@@ -5,7 +5,7 @@ export default {
   content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
-      // Paleta de marca IA System Group — familia visual compartida con GESCO
+      // Paleta de marca GEsco IA — familia visual compartida con GESCO
       // (mismo navy corporativo + amarillo "señal" del isotipo).
       // Úsala con: bg-brand-900, text-brand-500, bg-signal, text-signal, etc.
       colors: {

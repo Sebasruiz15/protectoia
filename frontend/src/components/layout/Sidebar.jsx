@@ -1,6 +1,7 @@
 // archivo: src/components/layout/Sidebar.jsx
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useTema } from "@/context/ThemeContext";
 
 // ── Íconos ────────────────────────────────────────────────────────
 const IconDashboard = () => (
@@ -28,13 +29,9 @@ const IconEmpresa = () => (
   </svg>
 );
 const IconChevron = ({ open }) => (
-  <svg
-    className="w-4 h-4 transition-transform duration-200"
-    style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M19 9l-7 7-7-7" />
+  <svg style={{ transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }}
+    className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
   </svg>
 );
 const IconLogout = () => (
@@ -50,50 +47,26 @@ const IconBolt = () => (
   </svg>
 );
 
-// ── Mapa de reportes según tipo ISP ──────────────────────────────
+// ── Reportes por tipo ISP ─────────────────────────────────────────
 const REPORTES_POR_ISP = {
-  ISP_RESIDENCIAL: [
-    { label: "Formato T.1.2",  path: "reportes/t12",  badge: "CRC"   },
-  ],
-  ISP_EMPRESARIAL: [
-    { label: "Formato T.1.1",  path: "reportes/t11",  badge: "CRC"   },
-  ],
-  ISP_MIXTO: [
-    { label: "Formato T.1.2",  path: "reportes/t12",  badge: "CRC"   },
-    { label: "Formato T.1.1",  path: "reportes/t11",  badge: "CRC"   },
-  ],
-  ISP_TV: [
-    { label: "Formato T.1.2",  path: "reportes/t12",  badge: "CRC"   },
-    { label: "Formato 7",      path: "reportes/f7",   badge: "MinTIC" },
-  ],
-  ISP_TV_MIXTO: [
-    { label: "Formato T.1.2",  path: "reportes/t12",  badge: "CRC"   },
-    { label: "Formato T.1.1",  path: "reportes/t11",  badge: "CRC"   },
-    { label: "Formato 7",      path: "reportes/f7",   badge: "MinTIC" },
-  ],
+  ISP_RESIDENCIAL: [{ label: "Formato T.1.2", path: "reportes/t12", badge: "CRC"    }],
+  ISP_EMPRESARIAL: [{ label: "Formato T.1.1", path: "reportes/t11", badge: "CRC"    }],
+  ISP_MIXTO:       [{ label: "Formato T.1.2", path: "reportes/t12", badge: "CRC"    },
+                    { label: "Formato T.1.1", path: "reportes/t11", badge: "CRC"    }],
+  ISP_TV:          [{ label: "Formato T.1.2", path: "reportes/t12", badge: "CRC"    },
+                    { label: "Formato 7",     path: "reportes/f7",  badge: "MinTIC" }],
+  ISP_TV_MIXTO:    [{ label: "Formato T.1.2", path: "reportes/t12", badge: "CRC"    },
+                    { label: "Formato T.1.1", path: "reportes/t11", badge: "CRC"    },
+                    { label: "Formato 7",     path: "reportes/f7",  badge: "MinTIC" }],
 };
 
-// ── Estilos NavLink activo/inactivo ───────────────────────────────
-const linkBase = {
-  display:      "flex",
-  alignItems:   "center",
-  gap:          "10px",
-  padding:      "9px 12px",
-  borderRadius: "10px",
-  fontSize:     "13px",
-  fontWeight:   "500",
-  transition:   "background 0.15s, color 0.15s",
-  textDecoration: "none",
-  color:        "rgba(147,197,253,0.6)",
-};
-
-// ── Componente ────────────────────────────────────────────────────
 export function Sidebar({ empresa }) {
-  const navigate           = useNavigate();
+  const navigate             = useNavigate();
+  const { tema }             = useTema();
   const [reportesOpen, setReportesOpen] = useState(true);
 
-  const tipoISP   = empresa?.tipo_isp ?? "ISP_RESIDENCIAL";
-  const reportes  = REPORTES_POR_ISP[tipoISP] ?? REPORTES_POR_ISP.ISP_RESIDENCIAL;
+  const isDark   = tema === "dark";
+  const reportes = REPORTES_POR_ISP[empresa?.tipo_isp] ?? REPORTES_POR_ISP.ISP_RESIDENCIAL;
 
   const cerrarSesion = () => {
     localStorage.removeItem("token");
@@ -101,129 +74,129 @@ export function Sidebar({ empresa }) {
     navigate("/login", { replace: true });
   };
 
+  // Colores adaptativos
+  const textMuted    = isDark ? "rgba(147,197,253,0.6)"  : "rgba(255,255,255,0.6)";
+  const textSubtle   = isDark ? "rgba(147,197,253,0.45)" : "rgba(255,255,255,0.45)";
+  const borderColor  = isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.1)";
+  const activeBg     = isDark ? "rgba(24,95,165,0.25)"   : "rgba(255,255,255,0.15)";
+  const activeBorder = isDark ? "rgba(56,136,211,0.3)"   : "rgba(255,255,255,0.3)";
+  const hoverBg      = isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.08)";
+
+  const linkStyle = (isActive) => ({
+    display:        "flex",
+    alignItems:     "center",
+    gap:            "10px",
+    padding:        "9px 12px",
+    borderRadius:   "10px",
+    fontSize:       "13px",
+    fontWeight:     "500",
+    textDecoration: "none",
+    transition:     "all 0.15s",
+    color:          isActive ? "white" : textMuted,
+    background:     isActive ? activeBg : "transparent",
+    border:         isActive ? `1px solid ${activeBorder}` : "1px solid transparent",
+  });
+
   return (
-    <aside
-      className="flex flex-col h-screen w-64 flex-shrink-0"
-      style={{
-        background:  "#021018",
-        borderRight: "1px solid rgba(255,255,255,0.06)",
-      }}
-    >
-      {/* ── Logo ── */}
-      <div
-        className="flex items-center gap-3 px-5 py-5"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{
-            background: "rgba(255,255,255,0.08)",
-            border:     "1px solid rgba(255,255,255,0.12)",
-            color:      "white",
-          }}
-        >
+    <aside style={{
+      display:      "flex",
+      flexDirection:"column",
+      height:       "100vh",
+      width:        "240px",
+      flexShrink:   0,
+      background:   "var(--bg-sidebar)",
+      borderRight:  `1px solid ${borderColor}`,
+    }}>
+
+      {/* Logo */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "18px 16px", borderBottom: `1px solid ${borderColor}` }}>
+        <div style={{
+          width: "32px", height: "32px", borderRadius: "9px",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: "rgba(255,255,255,0.1)",
+          border:     "1px solid rgba(255,255,255,0.15)",
+          color:      "white", flexShrink: 0,
+        }}>
           <IconBolt />
         </div>
         <div>
-          <p className="text-sm font-semibold text-white leading-tight">
-            IA System Group
+          <p style={{ fontSize: "13px", fontWeight: "600", color: "white", lineHeight: 1.2 }}>
+            Gesco IA
           </p>
-          <p className="text-[10px] uppercase tracking-widest"
-            style={{ color: "rgba(147,197,253,0.5)" }}>
+          <p style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.45)" }}>
             Compliance TIC
           </p>
         </div>
       </div>
 
-      {/* ── Empresa activa ── */}
-      <div
-        className="mx-3 mt-4 mb-2 px-3 py-3 rounded-xl"
-        style={{
-          background: "rgba(24,95,165,0.15)",
-          border:     "1px solid rgba(56,136,211,0.2)",
-        }}
-      >
-        <p className="text-[10px] uppercase tracking-widest mb-1"
-          style={{ color: "rgba(147,197,253,0.45)" }}>
+      {/* Empresa activa */}
+      <div style={{
+        margin: "10px 10px 4px",
+        padding: "10px 12px",
+        borderRadius: "10px",
+        background: isDark ? "rgba(24,95,165,0.15)" : "rgba(255,255,255,0.1)",
+        border:     isDark ? "1px solid rgba(56,136,211,0.2)" : "1px solid rgba(255,255,255,0.15)",
+      }}>
+        <p style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: textSubtle, marginBottom: "3px" }}>
           Empresa activa
         </p>
-        <p className="text-sm font-medium text-white leading-tight truncate">
+        <p style={{ fontSize: "12px", fontWeight: "500", color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {empresa?.razon_social ?? "—"}
         </p>
-        <p className="text-[10px] mt-0.5" style={{ color: "rgba(147,197,253,0.45)" }}>
+        <p style={{ fontSize: "10px", color: textSubtle, marginTop: "1px" }}>
           NIT {empresa?.nit ?? "—"}
         </p>
       </div>
 
-      {/* ── Navegación ── */}
-      <nav className="flex-1 px-3 py-3 flex flex-col gap-1 overflow-y-auto">
+      {/* Navegación */}
+      <nav style={{ flex: 1, padding: "8px 10px", display: "flex", flexDirection: "column", gap: "2px", overflowY: "auto" }}>
 
         {/* Dashboard */}
-        <NavLink
-          to="/portal"
-          end
-          style={({ isActive }) => ({
-            ...linkBase,
-            background: isActive ? "rgba(24,95,165,0.25)" : "transparent",
-            color:      isActive ? "white" : "rgba(147,197,253,0.6)",
-            border:     isActive ? "1px solid rgba(56,136,211,0.3)" : "1px solid transparent",
-          })}
-        >
+        <NavLink to="/portal" end style={({ isActive }) => linkStyle(isActive)}>
           <IconDashboard />
           Dashboard
         </NavLink>
 
-        {/* Mis reportes — con submenú */}
+        {/* Mis reportes */}
         <div>
           <button
             onClick={() => setReportesOpen((v) => !v)}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors"
             style={{
-              background: "transparent",
-              border:     "1px solid transparent",
-              color:      "rgba(147,197,253,0.6)",
-              fontSize:   "13px",
-              fontWeight: "500",
-              cursor:     "pointer",
+              width: "100%", display: "flex", alignItems: "center",
+              justifyContent: "space-between", padding: "9px 12px",
+              borderRadius: "10px", border: "1px solid transparent",
+              background: "transparent", color: textMuted,
+              fontSize: "13px", fontWeight: "500", cursor: "pointer",
+              transition: "all 0.15s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = hoverBg)}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
-            <span className="flex items-center gap-2.5">
-              <IconReportes />
-              Mis reportes
+            <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <IconReportes /> Mis reportes
             </span>
             <IconChevron open={reportesOpen} />
           </button>
 
-          {/* Sub-items según tipo ISP */}
           {reportesOpen && (
-            <div className="ml-4 mt-1 flex flex-col gap-1 pl-3"
-              style={{ borderLeft: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ marginLeft: "14px", paddingLeft: "12px", borderLeft: `1px solid ${borderColor}`, marginTop: "2px", display: "flex", flexDirection: "column", gap: "2px" }}>
               {reportes.map((r) => (
                 <NavLink
                   key={r.path}
                   to={`/portal/${r.path}`}
                   style={({ isActive }) => ({
-                    ...linkBase,
-                    fontSize:   "12px",
-                    padding:    "7px 10px",
-                    background: isActive ? "rgba(24,95,165,0.2)" : "transparent",
-                    color:      isActive ? "white" : "rgba(147,197,253,0.55)",
-                    border:     isActive ? "1px solid rgba(56,136,211,0.25)" : "1px solid transparent",
+                    ...linkStyle(isActive),
+                    fontSize: "12px",
+                    padding:  "7px 10px",
                   })}
                 >
-                  <span className="flex-1">{r.label}</span>
-                  <span
-                    className="text-[10px] px-1.5 py-0.5 rounded-full"
-                    style={{
-                      background: r.badge === "CRC"
-                        ? "rgba(56,136,211,0.15)"
-                        : "rgba(94,161,221,0.1)",
-                      color: r.badge === "CRC" ? "#93c5fd" : "#7dd3fc",
-                      border: "1px solid rgba(56,136,211,0.2)",
-                    }}
-                  >
+                  <span style={{ flex: 1 }}>{r.label}</span>
+                  <span style={{
+                    fontSize: "9px", padding: "2px 6px", borderRadius: "20px",
+                    background: isDark ? "rgba(56,136,211,0.15)" : "rgba(255,255,255,0.15)",
+                    color: isDark ? "#93c5fd" : "rgba(255,255,255,0.8)",
+                    border: isDark ? "1px solid rgba(56,136,211,0.25)" : "1px solid rgba(255,255,255,0.2)",
+                  }}>
                     {r.badge}
                   </span>
                 </NavLink>
@@ -233,44 +206,26 @@ export function Sidebar({ empresa }) {
         </div>
 
         {/* Calendario */}
-        <NavLink
-          to="/portal/calendario"
-          style={({ isActive }) => ({
-            ...linkBase,
-            background: isActive ? "rgba(24,95,165,0.25)" : "transparent",
-            color:      isActive ? "white" : "rgba(147,197,253,0.6)",
-            border:     isActive ? "1px solid rgba(56,136,211,0.3)" : "1px solid transparent",
-          })}
-        >
-          <IconCalendario />
-          Calendario
+        <NavLink to="/portal/calendario" style={({ isActive }) => linkStyle(isActive)}>
+          <IconCalendario /> Calendario
         </NavLink>
 
         {/* Mi empresa */}
-        <NavLink
-          to="/portal/empresa"
-          style={({ isActive }) => ({
-            ...linkBase,
-            background: isActive ? "rgba(24,95,165,0.25)" : "transparent",
-            color:      isActive ? "white" : "rgba(147,197,253,0.6)",
-            border:     isActive ? "1px solid rgba(56,136,211,0.3)" : "1px solid transparent",
-          })}
-        >
-          <IconEmpresa />
-          Mi empresa
+        <NavLink to="/portal/empresa" style={({ isActive }) => linkStyle(isActive)}>
+          <IconEmpresa /> Mi empresa
         </NavLink>
-
       </nav>
 
-      {/* ── Cerrar sesión ── */}
-      <div
-        className="px-3 py-4"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-      >
+      {/* Cerrar sesión */}
+      <div style={{ padding: "10px", borderTop: `1px solid ${borderColor}` }}>
         <button
           onClick={cerrarSesion}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors text-sm font-medium"
-          style={{ color: "rgba(248,113,113,0.6)", background: "transparent" }}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", gap: "10px",
+            padding: "9px 12px", borderRadius: "10px", border: "1px solid transparent",
+            background: "transparent", color: "rgba(248,113,113,0.6)",
+            fontSize: "13px", fontWeight: "500", cursor: "pointer", transition: "all 0.15s",
+          }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = "rgba(248,113,113,0.08)";
             e.currentTarget.style.color      = "rgba(248,113,113,0.9)";
@@ -280,8 +235,7 @@ export function Sidebar({ empresa }) {
             e.currentTarget.style.color      = "rgba(248,113,113,0.6)";
           }}
         >
-          <IconLogout />
-          Cerrar sesión
+          <IconLogout /> Cerrar sesión
         </button>
       </div>
     </aside>

@@ -7,26 +7,16 @@ export function PortalEmpresa() {
   const raw     = localStorage.getItem("empresa");
   const empresa = raw ? JSON.parse(raw) : null;
 
-  // Si no hay sesión, redirige al login
   if (!empresa) return <Navigate to="/login" replace />;
 
   return (
-    <div
-      className="flex h-screen overflow-hidden"
-      style={{ background: "#021018" }}
-    >
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--bg-base)" }}>
       <Sidebar empresa={empresa} />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <Topbar empresa={empresa} />
-
-        {/* Área de contenido */}
-       <main
-  className="flex-1 overflow-y-auto"
-  style={{ background: "#021018", padding: "16px 20px" }}
->
-  <Outlet />
-</main>
+        <main style={{ flex: 1, overflowY: "auto", padding: "16px 20px", background: "var(--bg-base)" }}>
+          <Outlet />
+        </main>
       </div>
     </div>
   );

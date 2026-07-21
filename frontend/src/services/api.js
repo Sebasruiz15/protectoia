@@ -16,7 +16,7 @@ api.interceptors.request.use((config) => {
 
 // ── Usuario demo (mock local) ─────────────────────────────────────
 const DEMO = {
-  email: "demo@iasystemgroup.co",
+  email: "demo@gesco.co",
   password: "Demo2026*",
   token: "demo-token-local",
   empresa: {
@@ -25,7 +25,7 @@ const DEMO = {
     nit: "900.437.268-8",
     tipo_isp: "ISP_TV",
     rep_legal: "Isabel Mercedes C. Descance",
-    email: "demo@iasystemgroup.co",
+    email: "demo@gesco.co",
     rol: "empresa",
     municipio: "Amagá, Antioquia",
   },
