@@ -9,6 +9,7 @@ import { Registro       } from "@/pages/Registro";
 import { PortalEmpresa  } from "@/pages/PortalEmpresa";
 import { Dashboard      } from "@/pages/Dashboard";
 import { FormularioT12  } from "@/pages/FormularioT12";
+import { PanelAdmin } from "@/pages/PanelAdmin";
 
 import "./index.css";
 
@@ -20,6 +21,10 @@ createRoot(document.getElementById("root")).render(
           <Route path="/login"    element={<Login />} />
           <Route path="/registro" element={<Registro />} />
 
+           {/* Ruta para el panel de administración */}
+           
+          <Route path="/admin" element={<PanelAdmin />} />
+
           <Route path="/portal" element={<PortalEmpresa />}>
             <Route index                element={<Dashboard />} />
             <Route path="reportes/t12"  element={<FormularioT12 />} />
@@ -29,7 +34,9 @@ createRoot(document.getElementById("root")).render(
             <Route path="empresa"       element={<Placeholder titulo="Mi empresa" />} />
           </Route>
 
+          
           <Route path="*" element={<Navigate to="/login" replace />} />
+
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
