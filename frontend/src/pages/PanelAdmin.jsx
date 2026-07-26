@@ -246,7 +246,7 @@ export function PanelAdmin() {
           </div>
           <div>
             <p style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)", lineHeight: 1.2 }}>
-              IA System Group
+              Gesco IA
             </p>
             <p style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)" }}>
               Panel de administración
