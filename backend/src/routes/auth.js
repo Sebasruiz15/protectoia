@@ -1,14 +1,10 @@
 // src/routes/auth.js
-import express from "express";
-import {
-  login,
-  registro,
-  verificarCodigo,
-} from "../controllers/authController.js";
+import { Router }                                    from 'express';
+import { login, registro, verificarOTP, reenviarOTP } from '../controllers/authController.js';
 
-export const authRouter = express.Router();
+export const authRouter = Router();
 
-// Rutas de autenticación
-authRouter.post("/registro", registro);
-authRouter.post("/verificar", verificarCodigo);
-authRouter.post("/login", login);
+authRouter.post('/login',           login);
+authRouter.post('/registro',        registro);
+authRouter.post('/verificar',       verificarOTP);
+authRouter.post('/reenviar-codigo', reenviarOTP);

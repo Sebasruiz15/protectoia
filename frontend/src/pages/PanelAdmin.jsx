@@ -1,8 +1,39 @@
 // archivo: src/pages/PanelAdmin.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTema } from "@/context/ThemeContext";
 import { EMPRESAS_MOCK, STATS_ADMIN } from "@/data/empresasMock";
+import { api } from "@/services/api";
+
+// ── Hook datos admin ──────────────────────────────────────────────
+function useDatosAdmin() {
+  const [empresas,  setEmpresas]  = useState([]);
+  const [reportes,  setReportes]  = useState([]);
+  const [resumen,   setResumen]   = useState(null);
+  const [cargando,  setCargando]  = useState(true);
+
+  useEffect(() => {
+    const cargar = async () => {
+      try {
+        const [resEmpresas, resReportes, resDash] = await Promise.all([
+          api.get("/reportes/admin/empresas"),
+          api.get("/reportes/admin/t12"),
+          api.get("/dashboard/admin"),
+        ]);
+        setEmpresas(resEmpresas.data.empresas);
+        setReportes(resReportes.data.reportes);
+        setResumen(resDash.data.resumen);
+      } catch (err) {
+        console.error("Error cargando datos admin:", err);
+      } finally {
+        setCargando(false);
+      }
+    };
+    cargar();
+  }, []);
+
+  return { empresas, reportes, resumen, cargando };
+}
 
 // ── Íconos ────────────────────────────────────────────────────────
 const IconBolt = () => (
@@ -108,15 +139,15 @@ function DetalleEmpresa({ empresa, onVolver }) {
             NIT {empresa.nit} · {TIPO_LABEL[empresa.tipo_isp]} · {empresa.municipio}
           </p>
         </div>
-        <Badge nivel={empresa.nivel_riesgo} />
+        <Badge nivel={empresa.nivel_riesgo ?? "al_dia"} />
       </div>
 
       {/* Métricas de la empresa */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px" }}>
-        <MetricaCard label="Obligaciones al día"  valor={empresa.obligaciones.al_dia}   color="#10b981" sub={`de ${empresa.obligaciones.total} totales`} />
-        <MetricaCard label="Próximas a vencer"    valor={empresa.obligaciones.proximas}  color="#f59e0b" />
-        <MetricaCard label="Obligaciones críticas" valor={empresa.obligaciones.criticas} color="#ef4444" />
-        <MetricaCard label="Reportes generados"   valor={empresa.reportes_generados}    color="#185FA5" />
+        <MetricaCard label="Total reportes"   valor={empresa.total_reportes ?? 0}  color="#185FA5" />
+        <MetricaCard label="Estado"           valor={empresa.estado}               color="#10b981" />
+        <MetricaCard label="Último reporte"   valor={empresa.ultimo_reporte ? new Date(empresa.ultimo_reporte).toLocaleDateString("es-CO") : "—"} color="#f59e0b" />
+        <MetricaCard label="Tipo ISP"         valor={TIPO_LABEL[empresa.tipo_isp] ?? "—"} color="#185FA5" />
       </div>
 
       {/* Info de la empresa */}
@@ -130,8 +161,8 @@ function DetalleEmpresa({ empresa, onVolver }) {
             { label: "Correo",              valor: empresa.email      },
             { label: "Municipio",           valor: empresa.municipio  },
             { label: "Tipo de ISP",         valor: TIPO_LABEL[empresa.tipo_isp] },
-            { label: "Último reporte",      valor: empresa.ultimo_reporte },
-            { label: "Próximo vencimiento", valor: empresa.proximo_vence  },
+            { label: "Último reporte", valor: empresa.ultimo_reporte ? new Date(empresa.ultimo_reporte).toLocaleDateString("es-CO") : "—" },
+            { label: "Total reportes", valor: empresa.total_reportes ?? 0 },
           ].map((r) => (
             <div key={r.label} style={{
               display: "flex", justifyContent: "space-between",
@@ -154,12 +185,12 @@ function DetalleEmpresa({ empresa, onVolver }) {
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
               <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>Cumplimiento general</span>
               <span style={{ fontSize: "11px", fontWeight: "600", color: "#10b981" }}>
-                {Math.round((empresa.obligaciones.al_dia / empresa.obligaciones.total) * 100)}%
+                {empresa.total_reportes ?? 0}%
               </span>
             </div>
             <div style={{ background: "var(--border-card)", borderRadius: "4px", height: "6px", overflow: "hidden" }}>
               <div style={{
-                width: `${(empresa.obligaciones.al_dia / empresa.obligaciones.total) * 100}%`,
+                width: `${Math.min((empresa.total_reportes ?? 0) * 10, 100)}%`,
                 height: "100%", background: "#10b981", borderRadius: "4px",
                 transition: "width 0.8s ease",
               }} />
@@ -168,9 +199,9 @@ function DetalleEmpresa({ empresa, onVolver }) {
 
           {/* Distribución */}
           {[
-            { label: "Al día",   valor: empresa.obligaciones.al_dia,   color: "#10b981" },
-            { label: "Próximas", valor: empresa.obligaciones.proximas,  color: "#f59e0b" },
-            { label: "Críticas", valor: empresa.obligaciones.criticas,  color: "#ef4444" },
+            { label: "Total reportes", valor: empresa.total_reportes ?? 0, color: "#185FA5" },
+            { label: "Estado",         valor: empresa.estado,              color: "#10b981" },
+            { label: "Tipo ISP",       valor: empresa.tipo_isp ?? "—",     color: "#f59e0b" },
           ].map((o) => (
             <div key={o.label} style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -198,9 +229,11 @@ export function PanelAdmin() {
 
   const admin = JSON.parse(localStorage.getItem("empresa") ?? "{}");
 
-  const [busqueda,        setBusqueda]        = useState("");
-  const [filtroRiesgo,    setFiltroRiesgo]    = useState("todos");
-  const [empresaDetalle,  setEmpresaDetalle]  = useState(null);
+    const { empresas, reportes, resumen, cargando } = useDatosAdmin();
+    const [busqueda,       setBusqueda]       = useState("");
+    const [filtroRiesgo,   setFiltroRiesgo]   = useState("todos");
+    const [empresaDetalle, setEmpresaDetalle] = useState(null);
+    const [vistaReportes,  setVistaReportes]  = useState(false);
 
   const cerrarSesion = () => {
     localStorage.removeItem("token");
@@ -208,12 +241,11 @@ export function PanelAdmin() {
     navigate("/login", { replace: true });
   };
 
-  const empresasFiltradas = EMPRESAS_MOCK.filter((e) => {
+    const empresasFiltradas = empresas.filter((e) => {
     const matchBusqueda = e.razon_social.toLowerCase().includes(busqueda.toLowerCase()) ||
                           e.nit.includes(busqueda);
-    const matchRiesgo   = filtroRiesgo === "todos" || e.nivel_riesgo === filtroRiesgo;
-    return matchBusqueda && matchRiesgo;
-  });
+    return matchBusqueda;
+});
 
   const btnStyle = {
     width: "34px", height: "34px", borderRadius: "9px",
@@ -319,11 +351,11 @@ export function PanelAdmin() {
 
             {/* Métricas globales */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: "10px" }}>
-              <MetricaCard label="Total empresas"     valor={STATS_ADMIN.total_empresas}    color="var(--text-primary)" />
-              <MetricaCard label="Al día"             valor={STATS_ADMIN.empresas_al_dia}   color="#10b981" />
-              <MetricaCard label="Próximas a vencer"  valor={STATS_ADMIN.empresas_proximas} color="#f59e0b" />
-              <MetricaCard label="En riesgo crítico"  valor={STATS_ADMIN.empresas_criticas} color="#ef4444" />
-              <MetricaCard label="Reportes este mes"  valor={STATS_ADMIN.reportes_mes}      color="#185FA5" />
+              <MetricaCard label="Total empresas"        valor={resumen?.total_empresas       ?? "—"} color="var(--text-primary)" />
+              <MetricaCard label="Sin reporte trimestre" valor={resumen?.empresas_sin_reporte ?? "—"} color="#f59e0b" />
+              <MetricaCard label="Pendientes revisión"   valor={resumen?.pendientes_revision  ?? "—"} color="#ef4444" />
+              <MetricaCard label="Trimestre actual"      valor={resumen ? `${resumen.trimestre_actual} ${resumen.anio_actual}` : "—"} color="#185FA5" />
+              <MetricaCard label="Reportes recibidos"   valor={reportes.length}                      color="#10b981" />
             </div>
 
             {/* Filtros y búsqueda */}
@@ -416,28 +448,21 @@ export function PanelAdmin() {
                       <td style={{ padding: "12px 14px", fontSize: "11px", color: "var(--text-muted)" }}>{e.municipio}</td>
                       <td style={{ padding: "12px 14px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <div style={{ background: "var(--border-card)", borderRadius: "3px", height: "4px", width: "60px", overflow: "hidden" }}>
-                            <div style={{
-                              width: `${(e.obligaciones.al_dia / e.obligaciones.total) * 100}%`,
-                              height: "100%", background: "#10b981", borderRadius: "3px",
-                            }} />
-                          </div>
-                          <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>
-                            {e.obligaciones.al_dia}/{e.obligaciones.total}
+                          <span style={{ fontSize: "11px", fontWeight: "500", color: "#185FA5" }}>
+                            {e.total_reportes ?? 0} reportes
                           </span>
                         </div>
                       </td>
-                      <td style={{ padding: "12px 14px", fontSize: "11px", color: "var(--text-muted)" }}>{e.ultimo_reporte}</td>
-                      <td style={{ padding: "12px 14px" }}>
-                        <span style={{ fontSize: "11px", color: NIVEL[e.nivel_riesgo]?.color ?? "var(--text-muted)", fontWeight: "500" }}>
-                          {e.proximo_vence}
-                        </span>
-                        <p style={{ fontSize: "9px", color: "var(--text-muted)", marginTop: "1px" }}>
-                          {e.dias_restantes}d restantes
-                        </p>
+                      <td style={{ padding: "12px 14px", fontSize: "11px", color: "var(--text-muted)" }}>
+                        {e.ultimo_reporte ? new Date(e.ultimo_reporte).toLocaleDateString("es-CO") : "—"}
                       </td>
                       <td style={{ padding: "12px 14px" }}>
-                        <Badge nivel={e.nivel_riesgo} />
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                          —
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px 14px" }}>
+                        <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>{e.estado}</span>
                       </td>
                       <td style={{ padding: "12px 14px" }}>
                         <button
@@ -460,7 +485,82 @@ export function PanelAdmin() {
                 </tbody>
               </table>
             </div>
-
+{/* Reportes recibidos */}
+{reportes.length > 0 && (
+  <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-card)", borderRadius: "12px", overflow: "hidden", marginTop: "10px" }}>
+    <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-card)" }}>
+      <p style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-primary)" }}>
+        Reportes T.1.2 recibidos ({reportes.length})
+      </p>
+    </div>
+    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <thead>
+        <tr style={{ background: "var(--bg-input)" }}>
+          {["Empresa","NIT","Período","Estado","Fecha envío","Acción"].map((h) => (
+            <th key={h} style={{ padding: "10px 14px", fontSize: "9px", fontWeight: "600", letterSpacing: "0.07em", color: "var(--text-muted)", textTransform: "uppercase", textAlign: "left", borderBottom: "1px solid var(--border-card)", whiteSpace: "nowrap" }}>
+              {h}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {reportes.map((r, i) => (
+          <tr key={r.id}
+            style={{ borderBottom: i < reportes.length - 1 ? "0.5px solid var(--border-card)" : "none" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-card-hover)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            <td style={{ padding: "12px 14px" }}>
+              <p style={{ fontSize: "12px", fontWeight: "500", color: "var(--text-primary)" }}>{r.razon_social}</p>
+            </td>
+            <td style={{ padding: "12px 14px", fontSize: "11px", color: "var(--text-muted)" }}>{r.nit}</td>
+            <td style={{ padding: "12px 14px", fontSize: "11px", color: "var(--text-primary)", fontWeight: "500" }}>
+              {r.trimestre} {r.anio}
+            </td>
+            <td style={{ padding: "12px 14px" }}>
+              <span style={{
+                fontSize: "10px", fontWeight: "600", padding: "2px 8px", borderRadius: "20px",
+                background: r.estado === "aprobado" ? "rgba(16,185,129,0.1)" : r.estado === "rechazado" ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)",
+                color:      r.estado === "aprobado" ? "#10b981"              : r.estado === "rechazado" ? "#ef4444"              : "#f59e0b",
+                border:     `0.5px solid ${r.estado === "aprobado" ? "rgba(16,185,129,0.3)" : r.estado === "rechazado" ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.3)"}`,
+              }}>
+                {r.estado === "pendiente_revision" ? "Pendiente" : r.estado === "aprobado" ? "Aprobado" : r.estado === "con_observaciones" ? "Con obs." : r.estado === "rechazado" ? "Rechazado" : r.estado}
+              </span>
+            </td>
+            <td style={{ padding: "12px 14px", fontSize: "11px", color: "var(--text-muted)" }}>
+              {new Date(r.created_at).toLocaleDateString("es-CO")}
+            </td>
+            <td style={{ padding: "12px 14px" }}>
+              <div style={{ display: "flex", gap: "6px" }}>
+                {["aprobado","con_observaciones","rechazado"].map((estado) => (
+                  <button
+                    key={estado}
+                    onClick={async () => {
+                      try {
+                        await api.patch(`/reportes/admin/t12/${r.id}`, { estado });
+                        window.location.reload();
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }}
+                    style={{
+                      fontSize: "10px", padding: "3px 8px", borderRadius: "6px", cursor: "pointer",
+                      background: estado === "aprobado" ? "rgba(16,185,129,0.1)" : estado === "rechazado" ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)",
+                      color:      estado === "aprobado" ? "#10b981"              : estado === "rechazado" ? "#ef4444"              : "#f59e0b",
+                      border:     `0.5px solid ${estado === "aprobado" ? "rgba(16,185,129,0.3)" : estado === "rechazado" ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.3)"}`,
+                    }}
+                  >
+                    {estado === "aprobado" ? "✓ Aprobar" : estado === "con_observaciones" ? "⚠ Obs." : "✗ Rechazar"}
+                  </button>
+                ))}
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
           </div>
         )}
       </main>

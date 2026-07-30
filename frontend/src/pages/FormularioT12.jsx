@@ -1,6 +1,7 @@
 // archivo: src/pages/FormularioT12.jsx
 import { useState } from "react";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
+import { api } from "@/services/api";
 
 const TRIMESTRES = ["1T", "2T", "3T", "4T"];
 
@@ -515,7 +516,10 @@ export function FormularioT12() {
   const [paso,    setPaso]    = useState(1);
   const [periodo, setPeriodo] = useState({ anio: "2026", trimestre: "2T", municipio: empresa.municipio ?? "" });
   const [planes,  setPlanes]  = useState([planVacio()]);
-  const [pqr,     setPQR]     = useState(MESES_POR_TRIMESTRE["2T"].map((mes) => pqrVacio(mes)));
+  const [pqr,          setPQR]         = useState(MESES_POR_TRIMESTRE["2T"].map((mes) => pqrVacio(mes)));
+  const [cargando,     setCargando]     = useState(false);
+  const [errorGuardar, setErrorGuardar] = useState("");
+  const [exitoVisible, setExitoVisible] = useState(false);
 
   const handlePeriodoChange = (campo, valor) => {
     setPeriodo((prev) => {
@@ -532,278 +536,292 @@ export function FormularioT12() {
   };
 
   // ── Generación del Excel ──────────────────────────────────────
-  const generarReporte = () => {
-  const wb = XLSX.utils.book_new();
+  const generarReporte = async () => {
+  setCargando(true);
+  setErrorGuardar("");
+  setExitoVisible(false);
 
-  // ── Utilidad: aplicar estilo a un rango ───────────────────────
-  const aplicarEstilo = (ws, celda, estilo) => {
-    if (!ws[celda]) ws[celda] = { t: "s", v: "" };
-    ws[celda].s = estilo;
-  };
+  try {
+    // ── 1. Guardar en base de datos ───────────────────────────
+    await api.post("/reportes/t12", {
+      anio:         periodo.anio,
+      trimestre:    periodo.trimestre,
+      municipio:    periodo.municipio,
+      datos_planes: planes,
+      datos_pqr:    pqr,
+    });
 
-  const estilos = {
-    titulo: {
-      font:      { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
-      fill:      { fgColor: { rgb: "0C2340" } },
+    // ── 2. Estilos reutilizables ──────────────────────────────
+    const AZUL_OSCURO  = "0C2340";
+    const AZUL_MEDIO   = "185FA5";
+    const AZUL_CLARO   = "E6F1FB";
+    const VERDE        = "0F6E56";
+    const BLANCO       = "FFFFFF";
+    const GRIS_CLARO   = "F4F8FC";
+    const GRIS_TEXTO   = "64748B";
+
+    const sTitulo = {
+      font:      { bold: true, sz: 14, color: { rgb: BLANCO } },
+      fill:      { fgColor: { rgb: AZUL_OSCURO } },
       alignment: { horizontal: "left", vertical: "center" },
-    },
-    subtitulo: {
-      font:      { bold: false, sz: 10, color: { rgb: "FFFFFF" } },
-      fill:      { fgColor: { rgb: "185FA5" } },
+    };
+    const sSubtitulo = {
+      font:      { bold: false, sz: 10, color: { rgb: BLANCO } },
+      fill:      { fgColor: { rgb: AZUL_MEDIO } },
       alignment: { horizontal: "left", vertical: "center" },
-    },
-    encabezado: {
-      font:      { bold: true, sz: 10, color: { rgb: "FFFFFF" } },
-      fill:      { fgColor: { rgb: "185FA5" } },
+    };
+    const sEncabezado = {
+      font:      { bold: true, sz: 10, color: { rgb: BLANCO } },
+      fill:      { fgColor: { rgb: AZUL_MEDIO } },
       alignment: { horizontal: "center", vertical: "center", wrapText: true },
       border: {
-        bottom: { style: "thin", color: { rgb: "FFFFFF" } },
-        right:  { style: "thin", color: { rgb: "FFFFFF" } },
+        top:    { style: "thin", color: { rgb: BLANCO } },
+        bottom: { style: "thin", color: { rgb: BLANCO } },
+        left:   { style: "thin", color: { rgb: BLANCO } },
+        right:  { style: "thin", color: { rgb: BLANCO } },
       },
-    },
-    celdaLabel: {
-      font:      { bold: true, sz: 10, color: { rgb: "0C2340" } },
-      fill:      { fgColor: { rgb: "E6F1FB" } },
+    };
+    const sLabel = {
+      font:      { bold: true, sz: 10, color: { rgb: AZUL_OSCURO } },
+      fill:      { fgColor: { rgb: AZUL_CLARO } },
       alignment: { horizontal: "left", vertical: "center" },
-    },
-    celdaValor: {
+      border:    { bottom: { style: "thin", color: { rgb: "DDDDDD" } } },
+    };
+    const sValor = {
       font:      { sz: 10, color: { rgb: "1A1A1A" } },
       alignment: { horizontal: "left", vertical: "center" },
-    },
-    celdaDato: {
+      border:    { bottom: { style: "thin", color: { rgb: "DDDDDD" } } },
+    };
+    const sDatoNormal = {
       font:      { sz: 10 },
-      alignment: { horizontal: "center", vertical: "center" },
-      border: {
-        bottom: { style: "thin", color: { rgb: "DDDDDD" } },
-        right:  { style: "thin", color: { rgb: "DDDDDD" } },
-      },
-    },
-    celdaTexto: {
-      font:      { sz: 10 },
+      fill:      { fgColor: { rgb: BLANCO } },
       alignment: { horizontal: "left", vertical: "center" },
-      border: {
-        bottom: { style: "thin", color: { rgb: "DDDDDD" } },
-        right:  { style: "thin", color: { rgb: "DDDDDD" } },
-      },
-    },
-    totalFila: {
-      font:      { bold: true, sz: 10, color: { rgb: "FFFFFF" } },
-      fill:      { fgColor: { rgb: "0C2340" } },
-      alignment: { horizontal: "center", vertical: "center" },
-    },
-    subtotalFila: {
-      font:      { bold: true, sz: 10, color: { rgb: "0C2340" } },
-      fill:      { fgColor: { rgb: "E6F1FB" } },
-      alignment: { horizontal: "center", vertical: "center" },
-    },
-    numero: {
+      border:    { bottom: { style: "thin", color: { rgb: "EEEEEE" } }, right: { style: "thin", color: { rgb: "EEEEEE" } } },
+    };
+    const sDatoAlterno = {
+      ...sDatoNormal,
+      fill: { fgColor: { rgb: GRIS_CLARO } },
+    };
+    const sNumero = (alterno = false) => ({
       font:      { sz: 10 },
+      fill:      { fgColor: { rgb: alterno ? GRIS_CLARO : BLANCO } },
       alignment: { horizontal: "right", vertical: "center" },
       numFmt:    "#,##0",
-      border: {
-        bottom: { style: "thin", color: { rgb: "DDDDDD" } },
-        right:  { style: "thin", color: { rgb: "DDDDDD" } },
-      },
-    },
-  };
-
-  // ── Hoja 1: Identificación ────────────────────────────────────
-  const wsInfo = XLSX.utils.aoa_to_sheet([
-    ["FORMATO T.1.2 — FORMATO UNIFICADO ISP", ""],
-    ["Resolución CRC 7811 · Reporte de información sectorial", ""],
-    ["", ""],
-    ["DATOS DEL OPERADOR", ""],
-    ["Operador",         empresa.razon_social ?? ""],
-    ["NIT",              empresa.nit           ?? ""],
-    ["Tipo de ISP",      empresa.tipo_isp      ?? ""],
-    ["", ""],
-    ["PERÍODO DE REPORTE", ""],
-    ["Año",              periodo.anio],
-    ["Trimestre",        periodo.trimestre],
-    ["Municipio",        periodo.municipio],
-    ["", ""],
-    ["GENERACIÓN", ""],
-    ["Fecha generación", new Date().toLocaleDateString("es-CO")],
-    ["Generado por",     "IA System Group · Compliance TIC"],
-  ]);
-
-  wsInfo["!cols"] = [{ wch: 22 }, { wch: 45 }];
-  wsInfo["!rows"] = [{ hpt: 28 }, { hpt: 18 }];
-
-  // Estilos hoja identificación
-  aplicarEstilo(wsInfo, "A1", estilos.titulo);
-  aplicarEstilo(wsInfo, "B1", estilos.titulo);
-  aplicarEstilo(wsInfo, "A2", estilos.subtitulo);
-  aplicarEstilo(wsInfo, "B2", estilos.subtitulo);
-
-  ["A4","A9","A14"].forEach((c) => aplicarEstilo(wsInfo, c, estilos.encabezado));
-
-  ["A5","A6","A7","A10","A11","A12","A15","A16"].forEach((c) =>
-    aplicarEstilo(wsInfo, c, estilos.celdaLabel)
-  );
-  ["B5","B6","B7","B10","B11","B12","B15","B16"].forEach((c) =>
-    aplicarEstilo(wsInfo, c, estilos.celdaValor)
-  );
-
-  // Merge celdas título
-  wsInfo["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } },
-    { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
-    { s: { r: 8, c: 0 }, e: { r: 8, c: 1 } },
-    { s: { r: 13, c: 0 }, e: { r: 13, c: 1 } },
-  ];
-
-  XLSX.utils.book_append_sheet(wb, wsInfo, "Identificación");
-
-  // ── Hoja 2: Planes ISP ────────────────────────────────────────
-  const cabeceraPlanes = [
-    "Municipio", "Departamento", "Clase", "Segmento", "Tecnología",
-    "Vel. Bajada (Mbps)", "Vel. Subida (Mbps)",
-    "Valor Plan sin IVA ($)", "Accesos Activos",
-  ];
-
-  const filasPlanes = planes.map((p) => [
-    p.municipio,
-    p.departamento,
-    p.clase,
-    p.segmento,
-    p.tecnologia,
-    parseFloat(p.vel_bajada) || 0,
-    parseFloat(p.vel_subida) || 0,
-    parseFloat(p.valor_plan) || 0,
-    parseInt(p.accesos)      || 0,
-  ]);
-
-  const totalAccesos = planes.reduce((a, p) => a + (parseInt(p.accesos) || 0), 0);
-  const totalValor   = planes.reduce((a, p) => a + (parseFloat(p.valor_plan) || 0), 0);
-
-  const filaTotal = ["TOTALES", "", "", "", "", "", "", totalValor, totalAccesos];
-
-  const wsPlanes = XLSX.utils.aoa_to_sheet([
-    cabeceraPlanes,
-    ...filasPlanes,
-    filaTotal,
-  ]);
-
-  wsPlanes["!cols"] = [
-    { wch: 18 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
-    { wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 16 },
-  ];
-  wsPlanes["!rows"] = [{ hpt: 36 }];
-
-  // Estilos encabezados planes
-  "ABCDEFGHI".split("").forEach((col) => {
-    aplicarEstilo(wsPlanes, `${col}1`, estilos.encabezado);
-  });
-
-  // Estilos filas de datos
-  filasPlanes.forEach((_, i) => {
-    const fila = i + 2;
-    const alterno = i % 2 === 0
-      ? { fill: { fgColor: { rgb: "FFFFFF" } } }
-      : { fill: { fgColor: { rgb: "F4F8FC" } } };
-
-    ["A","B","C","D","E"].forEach((col) => {
-      aplicarEstilo(wsPlanes, `${col}${fila}`, { ...estilos.celdaTexto, ...alterno });
+      border:    { bottom: { style: "thin", color: { rgb: "EEEEEE" } }, right: { style: "thin", color: { rgb: "EEEEEE" } } },
     });
-    ["F","G","H","I"].forEach((col) => {
-      aplicarEstilo(wsPlanes, `${col}${fila}`, { ...estilos.numero, ...alterno });
+    const sTotal = {
+      font:      { bold: true, sz: 10, color: { rgb: BLANCO } },
+      fill:      { fgColor: { rgb: AZUL_OSCURO } },
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+    const sSubtotal = {
+      font:      { bold: true, sz: 10, color: { rgb: AZUL_OSCURO } },
+      fill:      { fgColor: { rgb: AZUL_CLARO } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border:    { bottom: { style: "medium", color: { rgb: AZUL_MEDIO } } },
+    };
+    const sSectionTitle = {
+      font:      { bold: true, sz: 11, color: { rgb: AZUL_OSCURO } },
+      fill:      { fgColor: { rgb: AZUL_CLARO } },
+      alignment: { horizontal: "left", vertical: "center" },
+      border:    { left: { style: "medium", color: { rgb: AZUL_MEDIO } } },
+    };
+
+    const wb = XLSX.utils.book_new();
+
+    // ── Hoja 1: Identificación ────────────────────────────────
+    const infoData = [
+      ["FORMATO T.1.2 — FORMATO UNIFICADO ISP", ""],
+      ["Resolución CRC 7811 · Reporte de información sectorial", ""],
+      ["", ""],
+      ["DATOS DEL OPERADOR", ""],
+      ["Operador",          empresa.razon_social ?? ""],
+      ["NIT",               empresa.nit           ?? ""],
+      ["Tipo de ISP",       empresa.tipo_isp      ?? ""],
+      ["", ""],
+      ["PERÍODO DE REPORTE", ""],
+      ["Año",               periodo.anio],
+      ["Trimestre",         periodo.trimestre],
+      ["Municipio",         periodo.municipio],
+      ["", ""],
+      ["GENERACIÓN", ""],
+      ["Fecha generación",  new Date().toLocaleDateString("es-CO")],
+      ["Generado por",      "Gesco IA · Compliance TIC"],
+    ];
+
+    const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
+    wsInfo["!cols"] = [{ wch: 22 }, { wch: 45 }];
+    wsInfo["!rows"] = [{ hpt: 28 }, { hpt: 18 }];
+    wsInfo["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
+      { s: { r: 8, c: 0 }, e: { r: 8, c: 1 } },
+      { s: { r: 13, c: 0 }, e: { r: 13, c: 1 } },
+    ];
+
+    // Aplicar estilos hoja info
+    wsInfo["A1"].s = sTitulo;   wsInfo["B1"].s = sTitulo;
+    wsInfo["A2"].s = sSubtitulo; wsInfo["B2"].s = sSubtitulo;
+    wsInfo["A4"].s = sSectionTitle; wsInfo["B4"].s = sSectionTitle;
+    wsInfo["A9"].s = sSectionTitle; wsInfo["B9"].s = sSectionTitle;
+    wsInfo["A14"].s = sSectionTitle; wsInfo["B14"].s = sSectionTitle;
+    ["A5","A6","A7","A10","A11","A12","A15","A16"].forEach(c => { if(wsInfo[c]) wsInfo[c].s = sLabel; });
+    ["B5","B6","B7","B10","B11","B12","B15","B16"].forEach(c => { if(wsInfo[c]) wsInfo[c].s = sValor; });
+
+    XLSX.utils.book_append_sheet(wb, wsInfo, "Identificación");
+
+    // ── Hoja 2: Planes ISP ────────────────────────────────────
+    const cabPlanes = [
+      "Municipio","Departamento","Clase","Segmento","Tecnología",
+      "Vel. Bajada (Mbps)","Vel. Subida (Mbps)",
+      "Valor Plan sin IVA ($)","Accesos Activos",
+    ];
+
+    const filasPlanes = planes.map((p) => [
+      p.municipio, p.departamento, p.clase, p.segmento, p.tecnologia,
+      parseFloat(p.vel_bajada) || 0,
+      parseFloat(p.vel_subida) || 0,
+      parseFloat(p.valor_plan) || 0,
+      parseInt(p.accesos)      || 0,
+    ]);
+
+    const totalAccesos = planes.reduce((a, p) => a + (parseInt(p.accesos) || 0), 0);
+    const totalValor   = planes.reduce((a, p) => a + (parseFloat(p.valor_plan) || 0), 0);
+
+    const wsPlanes = XLSX.utils.aoa_to_sheet([
+      cabPlanes,
+      ...filasPlanes,
+      ["TOTALES","","","","","","",totalValor, totalAccesos],
+    ]);
+
+    wsPlanes["!cols"] = [
+      {wch:18},{wch:16},{wch:14},{wch:14},{wch:14},
+      {wch:18},{wch:18},{wch:22},{wch:16},
+    ];
+    wsPlanes["!rows"] = [{ hpt: 36 }];
+
+    // Estilos encabezados
+    "ABCDEFGHI".split("").forEach(col => {
+      const cell = `${col}1`;
+      if (wsPlanes[cell]) wsPlanes[cell].s = sEncabezado;
     });
-  });
 
-  // Estilo fila total
-  const filasTotalIdx = filasPlanes.length + 2;
-  "ABCDEFGHI".split("").forEach((col) => {
-    aplicarEstilo(wsPlanes, `${col}${filasTotalIdx}`, estilos.totalFila);
-  });
+    // Estilos filas datos
+    filasPlanes.forEach((_, i) => {
+      const fila   = i + 2;
+      const alterno = i % 2 !== 0;
+      ["A","B","C","D","E"].forEach(col => {
+        const c = `${col}${fila}`;
+        if (wsPlanes[c]) wsPlanes[c].s = alterno ? sDatoAlterno : sDatoNormal;
+      });
+      ["F","G","H","I"].forEach(col => {
+        const c = `${col}${fila}`;
+        if (wsPlanes[c]) wsPlanes[c].s = sNumero(alterno);
+      });
+    });
 
-  XLSX.utils.book_append_sheet(wb, wsPlanes, "Planes ISP");
+    // Fila totales
+    const filaTotal = filasPlanes.length + 2;
+    "ABCDEFGHI".split("").forEach(col => {
+      const c = `${col}${filaTotal}`;
+      if (wsPlanes[c]) wsPlanes[c].s = sTotal;
+    });
 
-  // ── Hoja 3: PQR ───────────────────────────────────────────────
-  const cabeceraPQR = [
-    "Mes", "Código", "Tipología",
-    "Total PQR", "A favor usuario", "A favor operador",
-    "Reposición", "Apelación",
-  ];
+    XLSX.utils.book_append_sheet(wb, wsPlanes, "Planes ISP");
 
-  const filasPQR = [];
-  pqr.forEach((mes) => {
-    mes.filas.forEach((fila) => {
+    // ── Hoja 3: PQR ───────────────────────────────────────────
+    const cabPQR = [
+      "Mes","Código","Tipología","Total PQR",
+      "A favor usuario","A favor operador","Reposición","Apelación",
+    ];
+
+    const filasPQR = [];
+    const coloresMes = [BLANCO, GRIS_CLARO, "EDF4FF"];
+
+    pqr.forEach((mes, mi) => {
+      mes.filas.forEach((fila) => {
+        filasPQR.push([
+          mes.mes, fila.codigo, fila.desc,
+          parseInt(fila.total)      || 0,
+          parseInt(fila.a_favor)    || 0,
+          parseInt(fila.en_contra)  || 0,
+          parseInt(fila.reposicion) || 0,
+          parseInt(fila.apelacion)  || 0,
+          mi, // índice color (se eliminará)
+        ]);
+      });
       filasPQR.push([
-        mes.mes,
-        fila.codigo,
-        fila.desc,
-        parseInt(fila.total)      || 0,
-        parseInt(fila.a_favor)    || 0,
-        parseInt(fila.en_contra)  || 0,
-        parseInt(fila.reposicion) || 0,
-        parseInt(fila.apelacion)  || 0,
+        `TOTAL ${mes.mes.toUpperCase()}`, "", "",
+        mes.filas.reduce((a, f) => a + (parseInt(f.total)      || 0), 0),
+        mes.filas.reduce((a, f) => a + (parseInt(f.a_favor)    || 0), 0),
+        mes.filas.reduce((a, f) => a + (parseInt(f.en_contra)  || 0), 0),
+        mes.filas.reduce((a, f) => a + (parseInt(f.reposicion) || 0), 0),
+        mes.filas.reduce((a, f) => a + (parseInt(f.apelacion)  || 0), 0),
+        -1, // marca de subtotal
       ]);
     });
-    filasPQR.push([
-      `TOTAL ${mes.mes.toUpperCase()}`, "", "",
-      mes.filas.reduce((a, f) => a + (parseInt(f.total)      || 0), 0),
-      mes.filas.reduce((a, f) => a + (parseInt(f.a_favor)    || 0), 0),
-      mes.filas.reduce((a, f) => a + (parseInt(f.en_contra)  || 0), 0),
-      mes.filas.reduce((a, f) => a + (parseInt(f.reposicion) || 0), 0),
-      mes.filas.reduce((a, f) => a + (parseInt(f.apelacion)  || 0), 0),
-    ]);
-  });
 
-  const wsPQR = XLSX.utils.aoa_to_sheet([cabeceraPQR, ...filasPQR]);
+    // Extraer índice de color y crear hoja
+    const filasPQRLimpias = filasPQR.map(f => f.slice(0, 8));
+    const wsPQR = XLSX.utils.aoa_to_sheet([cabPQR, ...filasPQRLimpias]);
 
-  wsPQR["!cols"] = [
-    { wch: 14 }, { wch: 8 }, { wch: 32 },
-    { wch: 12 }, { wch: 16 }, { wch: 16 },
-    { wch: 12 }, { wch: 12 },
-  ];
-  wsPQR["!rows"] = [{ hpt: 36 }];
+    wsPQR["!cols"] = [
+      {wch:14},{wch:8},{wch:32},{wch:12},
+      {wch:16},{wch:16},{wch:12},{wch:12},
+    ];
+    wsPQR["!rows"] = [{ hpt: 36 }];
 
-  // Estilos encabezados PQR
-  "ABCDEFGH".split("").forEach((col) => {
-    aplicarEstilo(wsPQR, `${col}1`, estilos.encabezado);
-  });
-
-  // Estilos filas PQR
-  let filaActual = 2;
-  let colorMes = 0;
-  const coloresMes = ["FFFFFF", "F4F8FC", "EDF4FF"];
-
-  pqr.forEach((mes, mi) => {
-    const colorBase = coloresMes[mi % coloresMes.length];
-
-    mes.filas.forEach(() => {
-      "ABC".split("").forEach((col) => {
-        aplicarEstilo(wsPQR, `${col}${filaActual}`, {
-          ...estilos.celdaTexto,
-          fill: { fgColor: { rgb: colorBase } },
-        });
-      });
-      "DEFGH".split("").forEach((col) => {
-        aplicarEstilo(wsPQR, `${col}${filaActual}`, {
-          ...estilos.numero,
-          fill: { fgColor: { rgb: colorBase } },
-        });
-      });
-      filaActual++;
+    // Estilos encabezados PQR
+    "ABCDEFGH".split("").forEach(col => {
+      const c = `${col}1`;
+      if (wsPQR[c]) wsPQR[c].s = sEncabezado;
     });
 
-    // Fila subtotal del mes
-    "ABCDEFGH".split("").forEach((col) => {
-      aplicarEstilo(wsPQR, `${col}${filaActual}`, estilos.subtotalFila);
+    // Estilos filas PQR
+    filasPQR.forEach((fila, i) => {
+      const rowIdx  = i + 2;
+      const colorIdx = fila[8];
+      const esSubtotal = colorIdx === -1;
+      const colorBase  = coloresMes[colorIdx % coloresMes.length] ?? BLANCO;
+
+      "ABCDEFGH".split("").forEach((col, ci) => {
+        const c = `${col}${rowIdx}`;
+        if (!wsPQR[c]) return;
+
+        if (esSubtotal) {
+          wsPQR[c].s = sSubtotal;
+        } else if (ci < 3) {
+          wsPQR[c].s = {
+            ...sDatoNormal,
+            fill: { fgColor: { rgb: colorBase } },
+          };
+        } else {
+          wsPQR[c].s = {
+            ...sNumero(false),
+            fill: { fgColor: { rgb: colorBase } },
+          };
+        }
+      });
     });
-    filaActual++;
-    colorMes++;
-  });
 
-  XLSX.utils.book_append_sheet(wb, wsPQR, "PQR");
+    XLSX.utils.book_append_sheet(wb, wsPQR, "PQR");
 
-  // ── Descargar ─────────────────────────────────────────────────
-  const nit    = (empresa.nit ?? "SIN_NIT").replace(/[^0-9]/g, "");
-  const nombre = `T1_2_${nit}_${periodo.trimestre}_${periodo.anio}.xlsx`;
-  XLSX.writeFile(wb, nombre);
+    // ── Descargar ─────────────────────────────────────────────
+    const nit    = (empresa.nit ?? "SIN_NIT").replace(/[^0-9]/g, "");
+    const nombre = `T1_2_${nit}_${periodo.trimestre}_${periodo.anio}.xlsx`;
+    XLSX.writeFile(wb, nombre);
+
+    setExitoVisible(true);
+
+  } catch (err) {
+    console.error(err);
+    setErrorGuardar(err.mensaje ?? "Error al guardar el reporte. Intenta de nuevo.");
+  } finally {
+    setCargando(false);
+  }
 };
+
 
 
   return (

@@ -1,132 +1,72 @@
 // archivo: src/pages/Dashboard.jsx
 import { useState, useEffect } from "react";
 import { useTema } from "@/context/ThemeContext";
+import { api } from "@/services/api";
 
-// ── Datos mock ────────────────────────────────────────────────────
-const OB_PENDIENTES = [
-  {
-    id: 1,
-    nombre: "Compensación TV — 2T 2026",
-    fecha: "31 jul 2026",
-    entidad: "MinTIC",
-    dias: 46,
-    color: "#f59e0b",
-  },
-  {
-    id: 2,
-    nombre: "Formato 7 — TV 2T 2026",
-    fecha: "31 jul 2026",
-    entidad: "MinTIC",
-    dias: 46,
-    color: "#f59e0b",
-  },
-  {
-    id: 3,
-    nombre: "FUTIC internet — Jun 2026",
-    fecha: "15 jul 2026",
-    entidad: "MinTIC",
-    dias: 30,
-    color: "#f59e0b",
-  },
-  {
-    id: 4,
-    nombre: "Reporte T.1.2 — 2T 2026",
-    fecha: "31 jul 2026",
-    entidad: "CRC/HECAA",
-    dias: 46,
-    color: "#f59e0b",
-  },
-];
+// ── Hook para cargar datos del dashboard ──────────────────────────
+function useDashboard() {
+  const [datos,    setDatos]    = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error,    setError]    = useState(null);
 
-const OB_COMPLETADAS = [
-  {
-    id: 5,
-    nombre: "Compensación TV — 1T 2026",
-    fecha: "28 abr 2026",
-    entidad: "MinTIC",
-  },
-  {
-    id: 6,
-    nombre: "Formato T.1.2 — 1T 2026",
-    fecha: "30 abr 2026",
-    entidad: "CRC",
-  },
-  {
-    id: 7,
-    nombre: "FUTIC internet — May 2026",
-    fecha: "14 may 2026",
-    entidad: "MinTIC",
-  },
-];
-
-const ACTIVIDAD = [
-  {
-    ic: "✓",
-    c: "#34d399",
-    bg: "rgba(52,211,153,0.15)",
-    t: "T.1.2 cargado en HECAA",
-    s: "Hace 2 días",
-  },
-  {
-    ic: "✓",
-    c: "#34d399",
-    bg: "rgba(52,211,153,0.15)",
-    t: "Compensación TV 1T pagada",
-    s: "Hace 7 semanas",
-  },
-  {
-    ic: "↑",
-    c: "#185FA5",
-    bg: "rgba(24,95,165,0.15)",
-    t: "FUTIC mayo 2026 liquidado",
-    s: "Hace 1 mes",
-  },
-];
-
-const GRAFICA = [
-  { t: "3T 25", i: 18.4, f: 0.35 },
-  { t: "4T 25", i: 21.2, f: 0.4 },
-  { t: "1T 26", i: 19.8, f: 0.38 },
-  { t: "2T 26", i: 22.1, f: 0.42 },
-];
-
-// ── Hook contador ─────────────────────────────────────────────────
-function useContador(obj, dur = 1000, on = false) {
-  const [v, setV] = useState(0);
   useEffect(() => {
-    if (!on) return;
-    const t0 = performance.now();
-    let r;
-    const f = (now) => {
-      const p = Math.min((now - t0) / dur, 1);
-      setV(Math.round(obj * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) r = requestAnimationFrame(f);
+    const cargar = async () => {
+      try {
+        const { data } = await api.get("/dashboard/empresa");
+        setDatos(data);
+      } catch (err) {
+        setError(err.mensaje ?? "Error al cargar el dashboard.");
+      } finally {
+        setCargando(false);
+      }
     };
-    r = requestAnimationFrame(f);
-    return () => cancelAnimationFrame(r);
-  }, [on, obj, dur]);
-  return v;
+    cargar();
+  }, []);
+
+  return { datos, cargando, error };
 }
 
-// ── Badge ─────────────────────────────────────────────────────────
+// ── Colores por estado de reporte ─────────────────────────────────
+const ESTADO_REPORTE = {
+  borrador:             { color: "#64748b", bg: "rgba(100,116,139,0.1)",  label: "Borrador"             },
+  pendiente_revision:   { color: "#f59e0b", bg: "rgba(245,158,11,0.1)",   label: "Pendiente revisión"   },
+  aprobado:             { color: "#10b981", bg: "rgba(16,185,129,0.1)",   label: "Aprobado"             },
+  con_observaciones:    { color: "#f59e0b", bg: "rgba(245,158,11,0.1)",   label: "Con observaciones"    },
+  rechazado:            { color: "#ef4444", bg: "rgba(239,68,68,0.1)",    label: "Rechazado"            },
+};
+
+// ── Badge estado ──────────────────────────────────────────────────
+function BadgeEstado({ estado }) {
+  const e = ESTADO_REPORTE[estado] ?? ESTADO_REPORTE.borrador;
+  return (
+    <span style={{
+      fontSize: "10px", fontWeight: "600", padding: "2px 8px",
+      borderRadius: "20px",
+      background: e.bg,
+      color:      e.color,
+      border:     `0.5px solid ${e.color}40`,
+      whiteSpace: "nowrap",
+    }}>
+      {e.label}
+    </span>
+  );
+}
+
+// ── Badge genérico ────────────────────────────────────────────────
 function Badge({ children, color }) {
   const p = {
-    green: ["rgba(52,211,153,0.15)", "rgba(52,211,153,0.35)", "#065f46"],
-    amber: ["rgba(245,158,11,0.15)", "rgba(245,158,11,0.35)", "#92400e"],
-    blue: ["rgba(24,95,165,0.12)", "rgba(24,95,165,0.3)", "#1e3a5f"],
-  }[color];
+    green: ["rgba(16,185,129,0.15)",  "rgba(16,185,129,0.35)",  "#065f46"],
+    amber: ["rgba(245,158,11,0.15)",  "rgba(245,158,11,0.35)",  "#92400e"],
+    blue:  ["rgba(24,95,165,0.12)",   "rgba(24,95,165,0.3)",    "#1e3a5f"],
+    red:   ["rgba(239,68,68,0.12)",   "rgba(239,68,68,0.3)",    "#7f1d1d"],
+  }[color] ?? ["rgba(100,116,139,0.12)", "rgba(100,116,139,0.3)", "#1e293b"];
+
   return (
-    <span
-      style={{
-        fontSize: "10px",
-        fontWeight: "600",
-        padding: "2px 8px",
-        borderRadius: "20px",
-        background: p[0],
-        border: `0.5px solid ${p[1]}`,
-        color: p[2],
-      }}
-    >
+    <span style={{
+      fontSize: "10px", fontWeight: "600", padding: "2px 8px",
+      borderRadius: "20px", background: p[0],
+      border: `0.5px solid ${p[1]}`, color: p[2],
+    }}>
       {children}
     </span>
   );
@@ -140,386 +80,81 @@ function Progreso({ pct, color, delay = 0 }) {
     return () => clearTimeout(t);
   }, [pct, delay]);
   return (
-    <div
-      style={{
-        background: "var(--border-card)",
-        borderRadius: "3px",
-        height: "3px",
-        overflow: "hidden",
-        marginTop: "5px",
-      }}
-    >
-      <div
-        style={{
-          width: `${w}%`,
-          height: "100%",
-          background: color,
-          borderRadius: "3px",
-          transition: "width 1s ease",
-        }}
-      />
+    <div style={{ background: "var(--border-card)", borderRadius: "3px", height: "3px", overflow: "hidden", marginTop: "5px" }}>
+      <div style={{ width: `${w}%`, height: "100%", background: color, borderRadius: "3px", transition: "width 1s ease" }} />
     </div>
   );
 }
 
-// ── Fila obligación ───────────────────────────────────────────────
-function FilaOb({ ob, done }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        padding: "7px 8px",
-        borderRadius: "7px",
-        marginBottom: "3px",
-        cursor: "pointer",
-        transition: "background 0.15s",
-        background: "transparent",
-      }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.background = "var(--bg-card-hover)")
-      }
-      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-    >
-      <div
-        style={{
-          width: "5px",
-          height: "5px",
-          borderRadius: "50%",
-          flexShrink: 0,
-          background: done ? "#34d399" : ob.color,
-        }}
-      />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p
-          style={{
-            fontSize: "11px",
-            fontWeight: "500",
-            color: "var(--text-primary)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {ob.nombre}
-        </p>
-        <p
-          style={{
-            fontSize: "9px",
-            color: "var(--text-muted)",
-            marginTop: "1px",
-          }}
-        >
-          {done ? `✓ ${ob.fecha}` : `Vence ${ob.fecha}`} · {ob.entidad}
-        </p>
-      </div>
-      {done ? (
-        <Badge color="green">OK</Badge>
-      ) : (
-        <span
-          style={{
-            fontSize: "10px",
-            fontWeight: "600",
-            color: ob.color,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {ob.dias}d
-        </span>
-      )}
-    </div>
-  );
-}
-
-// ── Mini calendario ───────────────────────────────────────────────
-function Calendario() {
-  const { tema } = useTema();
-  const isDark = tema === "dark";
-  const DIAS = ["L", "M", "M", "J", "V", "S", "D"];
-  const OFFSET = 6;
-  const ESP_JUL = { 15: "vence", 31: "critico" };
-
-  const s = {
-    normal: { color: "var(--text-muted)", bg: "transparent" },
-    hoy: { color: "white", bg: "#185FA5" },
-    vence: {
-      color: isDark ? "#fbbf24" : "#92400e",
-      bg: isDark ? "rgba(251,191,36,0.15)" : "rgba(245,158,11,0.12)",
-    },
-    critico: {
-      color: isDark ? "#f87171" : "#991b1b",
-      bg: isDark ? "rgba(248,113,113,0.15)" : "rgba(239,68,68,0.1)",
-    },
-    opaco: { color: "var(--text-muted)", bg: "transparent", opacity: 0.3 },
-  };
-
-  const Dia = ({ n, t = "normal" }) => (
-    <div
-      style={{
-        aspectRatio: "1",
-        borderRadius: "4px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "9px",
-        fontWeight: t === "hoy" ? "600" : "400",
-        background: s[t].bg,
-        color: s[t].color,
-        opacity: s[t].opacity ?? 1,
-      }}
-    >
-      {n}
-    </div>
-  );
-
-  return (
-    <div
-      style={{
-        background: "var(--bg-card)",
-        border: "1px solid var(--border-card)",
-        borderRadius: "12px",
-        padding: "14px",
-      }}
-    >
-      <p
-        style={{
-          fontSize: "9px",
-          fontWeight: "600",
-          letterSpacing: "0.09em",
-          color: "var(--text-muted)",
-          textTransform: "uppercase",
-          display: "block",
-          marginBottom: "8px",
-        }}
-      >
-        Jun · Jul 2026
-      </p>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "6px" }}>
-        {[
-          ["#185FA5", "Hoy"],
-          ["#f59e0b", "Vence"],
-          ["#ef4444", "Crítico"],
-        ].map(([c, l]) => (
-          <span
-            key={l}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "3px",
-              fontSize: "8px",
-              color: "var(--text-muted)",
-            }}
-          >
-            <span
-              style={{
-                width: "5px",
-                height: "5px",
-                borderRadius: "50%",
-                background: c,
-                display: "inline-block",
-              }}
-            />
-            {l}
-          </span>
-        ))}
-      </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7,1fr)",
-          gap: "2px",
-        }}
-      >
-        {DIAS.map((d) => (
-          <div
-            key={d}
-            style={{
-              fontSize: "8px",
-              color: "var(--text-muted)",
-              textAlign: "center",
-              paddingBottom: "2px",
-              opacity: 0.6,
-            }}
-          >
-            {d}
-          </div>
-        ))}
-        {Array.from({ length: OFFSET }).map((_, i) => (
-          <div key={`e${i}`} />
-        ))}
-        {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
-          <Dia key={`j${d}`} n={d} t={d === 15 ? "hoy" : "normal"} />
-        ))}
-        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-          <Dia key={`jul${d}`} n={d} t={ESP_JUL[d] ?? "opaco"} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Gráfica barras ────────────────────────────────────────────────
-function Grafica() {
+// ── Calendarioo regulatorio ───────────────────────────────────────
+function Calendario({ trimestre, anio, diasRestantes }) {
   const { tema } = useTema();
   const isDark   = tema === "dark";
+  const DIAS     = ["L","M","M","J","V","S","D"];
 
-  const barIngreso = isDark ? "rgba(56,136,211,0.7)"   : "rgba(24,95,165,0.75)";
-  const barFutic   = isDark ? "rgba(52,211,153,0.65)"  : "rgba(5,150,105,0.7)";
-  const textColor  = isDark ? "rgba(147,197,253,0.5)"  : "#64748b";
-  const lineColor  = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)";
+  // Mes de vencimiento según trimestre
+  const INFO_TRIM = {
+    "1T": { meses: ["Ene","Feb","Mar"], vence: "15 may" },
+    "2T": { meses: ["Abr","May","Jun"], vence: "14 ago" },
+    "3T": { meses: ["Jul","Ago","Sep"], vence: "14 nov" },
+    "4T": { meses: ["Oct","Nov","Dic"], vence: "14 feb" },
+  };
 
-  const H    = 70;   // altura de las barras
-  const PAD  = 16;   // padding superior para que el label no se corte
-  const MAX  = 25;
-  const TOTAL = H + PAD;
+  const info      = INFO_TRIM[trimestre] ?? INFO_TRIM["3T"];
+  const nivelRiesgo = diasRestantes < 15 ? "critico" : diasRestantes < 45 ? "proximo" : "al_dia";
+  const colorRiesgo = nivelRiesgo === "critico" ? "#ef4444" : nivelRiesgo === "proximo" ? "#f59e0b" : "#10b981";
 
   return (
-    <div>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "6px" }}>
-        {[[barIngreso,"Ingresos ISP"],[barFutic,"FUTIC"]].map(([c,l]) => (
-          <span key={l} style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "9px", color: "var(--text-muted)" }}>
-            <span style={{ width: "7px", height: "7px", borderRadius: "2px", background: c }} />{l}
+    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-card)", borderRadius: "12px", padding: "14px" }}>
+      <p style={{ fontSize: "9px", fontWeight: "600", letterSpacing: "0.09em", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "8px" }}>
+        {trimestre} {anio} · Vence {info.vence}
+      </p>
+
+      <div style={{ display: "flex", gap: "6px", marginBottom: "8px", flexWrap: "wrap" }}>
+        {info.meses.map((m) => (
+          <span key={m} style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "20px", background: "var(--accent-soft)", color: "var(--accent)", border: "0.5px solid var(--accent-border)" }}>
+            {m}
           </span>
         ))}
       </div>
 
-      <svg viewBox={`0 0 280 ${TOTAL + 14}`} style={{ width: "100%", overflow: "visible" }}>
-        {/* Líneas guía */}
-        {[0.5, 1].map((p) => (
-          <g key={p}>
-            <line
-              x1="38" y1={PAD + H - H * p}
-              x2="278" y2={PAD + H - H * p}
-              stroke={lineColor} strokeWidth="1"
-            />
-            <text
-              x="36" y={PAD + H - H * p + 3}
-              textAnchor="end" fontSize="7" fill={textColor}
-            >
-              ${MAX * p}M
-            </text>
-          </g>
-        ))}
-
-        {/* Barras */}
-        {GRAFICA.map((d, i) => {
-          const x  = 44 + i * 58;
-          const aI = (d.i / MAX) * H;
-          const aF = (d.f / 0.5) * H * 0.28;
-          return (
-            <g key={d.t}>
-              <rect x={x}      y={PAD + H - aI} width="18" height={aI} rx="3" fill={barIngreso} />
-              <rect x={x + 21} y={PAD + H - aF} width="18" height={aF} rx="3" fill={barFutic}   />
-              <text
-                x={x + 18} y={PAD + H + 11}
-                textAnchor="middle" fontSize="7" fill={textColor}
-              >
-                {d.t}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
+      <div style={{
+        padding: "10px 12px", borderRadius: "8px",
+        background: nivelRiesgo === "critico" ? "rgba(239,68,68,0.08)" : nivelRiesgo === "proximo" ? "rgba(245,158,11,0.08)" : "rgba(16,185,129,0.08)",
+        border: `0.5px solid ${colorRiesgo}40`,
+      }}>
+        <p style={{ fontSize: "11px", fontWeight: "600", color: colorRiesgo }}>
+          {diasRestantes} días para el vencimiento
+        </p>
+        <p style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px" }}>
+          {nivelRiesgo === "critico" ? "⚠ Urgente — entrega inmediata" : nivelRiesgo === "proximo" ? "Prepara el reporte pronto" : "✓ Tienes tiempo suficiente"}
+        </p>
+      </div>
     </div>
   );
 }
 
-// ── Dona ──────────────────────────────────────────────────────────
-function Dona() {
-  const { tema } = useTema();
-  const isDark = tema === "dark";
-
-  const datos = [
-    { l: "Al día", p: 75, c: "#10b981" },
-    { l: "Próximo", p: 17, c: "#f59e0b" },
-    { l: "Crítico", p: 8, c: "#ef4444" },
-  ];
-  const R = 24,
-    CX = 30,
-    CY = 30,
-    circ = 2 * Math.PI * R;
-  let off = 0;
-  const arcos = datos.map((d) => {
-    const dash = (d.p / 100) * circ;
-    const rot = (off / 100) * 360 - 90;
-    off += d.p;
-    return { ...d, dash, gap: circ - dash, rot };
-  });
-
-  const trackColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
-  const pctColor = isDark ? "white" : "#0a1628";
-  const lblColor = isDark ? "rgba(147,197,253,0.5)" : "#64748b";
-
+// ── Fila de reporte ───────────────────────────────────────────────
+function FilaReporte({ reporte, tipo }) {
+  const fecha = new Date(reporte.created_at).toLocaleDateString("es-CO");
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-      <svg viewBox="0 0 60 60" style={{ width: "60px", flexShrink: 0 }}>
-        <circle
-          cx={CX}
-          cy={CY}
-          r={R}
-          fill="none"
-          stroke={trackColor}
-          strokeWidth="8"
-        />
-        {arcos.map((a) => (
-          <circle
-            key={a.l}
-            cx={CX}
-            cy={CY}
-            r={R}
-            fill="none"
-            stroke={a.c}
-            strokeWidth="8"
-            strokeDasharray={`${a.dash} ${a.gap}`}
-            transform={`rotate(${a.rot} ${CX} ${CY})`}
-          />
-        ))}
-        <text
-          x={CX}
-          y={CY - 2}
-          textAnchor="middle"
-          fontSize="10"
-          fontWeight="600"
-          fill={pctColor}
-        >
-          75%
-        </text>
-        <text
-          x={CX}
-          y={CY + 8}
-          textAnchor="middle"
-          fontSize="6"
-          fill={lblColor}
-        >
-          al día
-        </text>
-      </svg>
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-        {datos.map((d) => (
-          <div
-            key={d.l}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              fontSize: "10px",
-              color: "var(--text-muted)",
-            }}
-          >
-            <span
-              style={{
-                width: "5px",
-                height: "5px",
-                borderRadius: "50%",
-                background: d.c,
-                flexShrink: 0,
-              }}
-            />
-            {d.l} · {d.p}%
-          </div>
-        ))}
+    <div style={{
+      display: "flex", alignItems: "center", gap: "8px",
+      padding: "7px 8px", borderRadius: "7px", marginBottom: "3px",
+      background: "transparent", transition: "background 0.15s", cursor: "pointer",
+    }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-card-hover)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+    >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: "11px", fontWeight: "500", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {tipo} — {reporte.trimestre} {reporte.anio}
+        </p>
+        <p style={{ fontSize: "9px", color: "var(--text-muted)", marginTop: "1px" }}>
+          Enviado {fecha}
+        </p>
       </div>
+      <BadgeEstado estado={reporte.estado} />
     </div>
   );
 }
@@ -527,421 +162,256 @@ function Dona() {
 // ── Acción rápida ─────────────────────────────────────────────────
 function Accion({ ic, label, to }) {
   return (
-    <a
-      href={to}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        padding: "8px 10px",
-        borderRadius: "8px",
-        background: "var(--bg-card-hover)",
-        border: "0.5px solid var(--border-card)",
-        textDecoration: "none",
-        transition: "all 0.15s",
-      }}
+    <a href={to} style={{
+      display: "flex", alignItems: "center", gap: "8px",
+      padding: "8px 10px", borderRadius: "8px",
+      background: "var(--bg-card-hover)",
+      border: "0.5px solid var(--border-card)",
+      textDecoration: "none", transition: "all 0.15s",
+    }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = "var(--accent-soft)";
+        e.currentTarget.style.background  = "var(--accent-soft)";
         e.currentTarget.style.borderColor = "var(--accent-border)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = "var(--bg-card-hover)";
+        e.currentTarget.style.background  = "var(--bg-card-hover)";
         e.currentTarget.style.borderColor = "var(--border-card)";
       }}
     >
-      <div
-        style={{
-          width: "26px",
-          height: "26px",
-          borderRadius: "7px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "var(--accent-soft)",
-          fontSize: "13px",
-          flexShrink: 0,
-        }}
-      >
+      <div style={{ width: "26px", height: "26px", borderRadius: "7px", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--accent-soft)", fontSize: "13px", flexShrink: 0 }}>
         {ic}
       </div>
-      <span
-        style={{
-          fontSize: "11px",
-          color: "var(--text-secondary)",
-          fontWeight: "500",
-        }}
-      >
+      <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "500" }}>
         {label}
       </span>
     </a>
   );
 }
 
+// ── Skeleton de carga ─────────────────────────────────────────────
+function Skeleton({ h = "20px", w = "100%", mb = "0" }) {
+  return (
+    <div style={{
+      height: h, width: w, borderRadius: "6px", marginBottom: mb,
+      background: "var(--border-card)",
+      animation: "pulse 1.5s ease-in-out infinite",
+    }} />
+  );
+}
+
 // ── Dashboard ─────────────────────────────────────────────────────
 export function Dashboard() {
   const empresa = JSON.parse(localStorage.getItem("empresa") ?? "{}");
-  const [tab, setTab] = useState("pendientes");
-  const [activo, setActivo] = useState(false);
-  const futic = useContador(419900, 1200, activo);
+  const { datos, cargando, error } = useDashboard();
 
-  useEffect(() => {
-    const t = setTimeout(() => setActivo(true), 200);
-    return () => clearTimeout(t);
-  }, []);
-
-  const tipoLabel =
-    empresa.tipo_isp === "ISP_TV" ? "Internet + TV" : "Internet";
-
-  // Estilos de card unificados
   const card = {
-    background: "var(--bg-card)",
-    border: "1px solid var(--border-card)",
+    background:   "var(--bg-card)",
+    border:       "1px solid var(--border-card)",
     borderRadius: "12px",
-    padding: "14px",
+    padding:      "14px",
   };
 
   const cardLabel = {
-    fontSize: "9px",
-    fontWeight: "600",
-    letterSpacing: "0.09em",
-    color: "var(--text-muted)",
-    textTransform: "uppercase",
-    display: "block",
-    marginBottom: "6px",
+    fontSize: "9px", fontWeight: "600", letterSpacing: "0.09em",
+    color: "var(--text-muted)", textTransform: "uppercase",
+    display: "block", marginBottom: "6px",
   };
 
+  // ── Estado de carga ──
+  if (cargando) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "1400px" }}>
+        <Skeleton h="24px" w="300px" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px" }}>
+          {[1,2,3,4].map((i) => <div key={i} style={card}><Skeleton h="60px" /></div>)}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 220px 180px", gap: "10px" }}>
+          <div style={card}><Skeleton h="200px" /></div>
+          <div style={card}><Skeleton h="200px" /></div>
+          <div style={card}><Skeleton h="200px" /></div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error ──
+  if (error) {
+    return (
+      <div style={{ ...card, maxWidth: "500px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+        <p style={{ fontSize: "13px", color: "#ef4444" }}>⚠ {error}</p>
+      </div>
+    );
+  }
+
+  const resumen       = datos?.resumen        ?? {};
+  const reportesT12   = datos?.reportes_t12   ?? [];
+  const reportesF7    = datos?.reportes_f7    ?? [];
+  const todosReportes = [...reportesT12.map(r => ({ ...r, tipo: "T.1.2" })),
+                          ...reportesF7.map(r => ({ ...r, tipo: "F.7" }))]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const tipoLabel = empresa.tipo_isp === "ISP_TV" ? "Internet + TV" : "Internet";
+  const pctCumplimiento = resumen.total_reportes > 0
+    ? Math.round((resumen.reportes_aprobados / resumen.total_reportes) * 100)
+    : 0;
+
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-        maxWidth: "1400px",
-      }}
-    >
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "1400px" }}>
+
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
-          <h1
-            style={{
-              fontSize: "16px",
-              fontWeight: "500",
-              color: "var(--text-primary)",
-            }}
-          >
+          <h1 style={{ fontSize: "16px", fontWeight: "500", color: "var(--text-primary)" }}>
             Bienvenido, {empresa.razon_social ?? "Empresa"} 👋
           </h1>
-          <p
-            style={{
-              fontSize: "11px",
-              color: "var(--text-muted)",
-              marginTop: "2px",
-            }}
-          >
-            Resumen regulatorio · 2T 2026 · {tipoLabel}
+          <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
+            Resumen regulatorio · {resumen.trimestre_actual} {resumen.anio_actual} · {tipoLabel}
           </p>
         </div>
         <div style={{ display: "flex", gap: "6px" }}>
-          <Badge color="green">✓ Al día</Badge>
-          <Badge color="amber">⚠ 2 próximos</Badge>
+          {resumen.dias_al_vencimiento < 15
+            ? <Badge color="red">⚠ Vence pronto</Badge>
+            : resumen.dias_al_vencimiento < 45
+            ? <Badge color="amber">⚠ {resumen.dias_al_vencimiento}d al vencimiento</Badge>
+            : <Badge color="green">✓ Al día</Badge>
+          }
+          {resumen.reporte_actual
+            ? <BadgeEstado estado={resumen.reporte_actual.estado} />
+            : <Badge color="amber">Sin reporte {resumen.trimestre_actual}</Badge>
+          }
         </div>
       </div>
 
       {/* Métricas */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4,1fr)",
-          gap: "10px",
-        }}
-      >
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px" }}>
+
         <div style={card}>
-          <span style={cardLabel}>Obligaciones al día</span>
-          <p
-            style={{
-              fontSize: "20px",
-              fontWeight: "500",
-              color: "var(--text-primary)",
-            }}
-          >
-            {activo ? "8 / 10" : "—"}
+          <span style={cardLabel}>Reportes enviados</span>
+          <p style={{ fontSize: "20px", fontWeight: "500", color: "var(--text-primary)" }}>
+            {resumen.total_reportes}
           </p>
-          <Progreso pct={80} color="#10b981" delay={200} />
+          <Progreso pct={Math.min(resumen.total_reportes * 20, 100)} color="#185FA5" delay={200} />
         </div>
 
         <div style={card}>
           <span style={cardLabel}>Próximo vencimiento</span>
-          <p
-            style={{
-              fontSize: "14px",
-              fontWeight: "500",
-              color: "var(--text-primary)",
-              marginBottom: "4px",
-            }}
-          >
-            31 jul 2026
+          <p style={{ fontSize: "14px", fontWeight: "500", color: "var(--text-primary)", marginBottom: "4px" }}>
+            {resumen.dias_al_vencimiento} días
           </p>
-          <span
-            style={{
-              fontSize: "10px",
-              color: "#f59e0b",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
-          >
-            <span
-              style={{
-                width: "5px",
-                height: "5px",
-                borderRadius: "50%",
-                background: "#f59e0b",
-                display: "inline-block",
-              }}
-            />
-            46 días · Compensación TV
+          <span style={{
+            fontSize: "10px",
+            color: resumen.dias_al_vencimiento < 15 ? "#ef4444" : resumen.dias_al_vencimiento < 45 ? "#f59e0b" : "#10b981",
+            display: "flex", alignItems: "center", gap: "4px",
+          }}>
+            <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "currentColor", display: "inline-block" }} />
+            {resumen.trimestre_actual} {resumen.anio_actual}
           </span>
         </div>
 
         <div style={card}>
-          <span style={cardLabel}>Reportes generados</span>
-          <p
-            style={{
-              fontSize: "20px",
-              fontWeight: "500",
-              color: "var(--text-primary)",
-            }}
-          >
-            {activo ? "5" : "—"}
+          <span style={cardLabel}>Reportes aprobados</span>
+          <p style={{ fontSize: "20px", fontWeight: "500", color: "var(--text-primary)" }}>
+            {resumen.reportes_aprobados}
           </p>
-          <Progreso pct={50} color="#185FA5" delay={400} />
-          <div style={{ marginTop: "5px" }}>
-            <Badge color="blue">T.1.2 + F.7</Badge>
-          </div>
+          <Progreso pct={pctCumplimiento} color="#10b981" delay={400} />
+          {resumen.total_reportes > 0 && (
+            <div style={{ marginTop: "5px" }}>
+              <Badge color="green">{pctCumplimiento}% aprobados</Badge>
+            </div>
+          )}
         </div>
 
         <div style={card}>
-          <span style={cardLabel}>FUTIC estimado</span>
-          <p
-            style={{
-              fontSize: "16px",
-              fontWeight: "500",
-              color: "var(--text-primary)",
-            }}
-          >
-            ${futic.toLocaleString("es-CO")}
-          </p>
-          <p
-            style={{
-              fontSize: "10px",
-              color: "var(--text-muted)",
-              marginTop: "4px",
-            }}
-          >
-            Jun 2026
-          </p>
+          <span style={cardLabel}>Estado trimestre actual</span>
+          {resumen.reporte_actual ? (
+            <>
+              <p style={{ fontSize: "13px", fontWeight: "500", color: "var(--text-primary)", marginBottom: "6px" }}>
+                {resumen.trimestre_actual} {resumen.anio_actual}
+              </p>
+              <BadgeEstado estado={resumen.reporte_actual.estado} />
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: "13px", fontWeight: "500", color: "#f59e0b", marginBottom: "4px" }}>
+                Sin reporte
+              </p>
+              <p style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+                No has enviado el {resumen.trimestre_actual}
+              </p>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Obligaciones + Calendario + Dona/Acciones */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 220px 180px",
-          gap: "10px",
-        }}
-      >
-        {/* Obligaciones */}
+      {/* Reportes + Calendario + Acciones */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 220px 180px", gap: "10px" }}>
+
+        {/* Mis reportes */}
         <div style={card}>
-          <span style={cardLabel}>Obligaciones regulatorias</span>
-          <div
-            style={{
-              display: "flex",
-              gap: "2px",
-              background: "var(--bg-base)",
-              borderRadius: "7px",
-              padding: "2px",
-              marginBottom: "8px",
-            }}
-          >
-            {["pendientes", "completadas"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                style={{
-                  flex: 1,
-                  padding: "5px",
-                  borderRadius: "5px",
-                  fontSize: "10px",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                  border:
-                    tab === t
-                      ? "0.5px solid var(--accent-border)"
-                      : "0.5px solid transparent",
-                  background: tab === t ? "var(--accent-soft)" : "transparent",
-                  color: tab === t ? "var(--accent)" : "var(--text-muted)",
-                }}
-              >
-                {t === "pendientes" ? "Pendientes" : "Completadas"}
-              </button>
-            ))}
-          </div>
-          {(tab === "pendientes" ? OB_PENDIENTES : OB_COMPLETADAS).map((ob) => (
-            <FilaOb key={ob.id} ob={ob} done={tab === "completadas"} />
-          ))}
+          <span style={cardLabel}>Mis reportes</span>
+
+          {todosReportes.length === 0 ? (
+            <div style={{
+              padding: "24px", textAlign: "center",
+              background: "var(--bg-input)", borderRadius: "8px",
+            }}>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "8px" }}>
+                📋 No tienes reportes enviados aún
+              </p>
+              <a href="/portal/reportes/t12" style={{
+                fontSize: "11px", color: "var(--accent)", fontWeight: "500",
+                textDecoration: "none",
+              }}>
+                Crear primer reporte T.1.2 →
+              </a>
+            </div>
+          ) : (
+            todosReportes.map((r) => (
+              <FilaReporte key={`${r.tipo}-${r.id}`} reporte={r} tipo={r.tipo} />
+            ))
+          )}
         </div>
 
         {/* Calendario */}
-        <Calendario />
+        <Calendario
+          trimestre={resumen.trimestre_actual}
+          anio={resumen.anio_actual}
+          diasRestantes={resumen.dias_al_vencimiento}
+        />
 
-        {/* Columna derecha */}
+        {/* Acciones rápidas */}
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <div style={card}>
-            <span style={cardLabel}>Cumplimiento 2026</span>
-            <Dona />
-          </div>
-          <div style={card}>
             <span style={cardLabel}>Acciones rápidas</span>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "5px" }}
-            >
-              <Accion ic="📋" label="Nuevo T.1.2" to="/portal/reportes/t12" />
-              <Accion ic="📺" label="Nuevo F.7" to="/portal/reportes/f7" />
-              <Accion ic="📅" label="Calendario" to="/portal/calendario" />
-              <Accion ic="📁" label="Historial" to="/portal/empresa" />
+            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+              <Accion ic="📋" label="Nuevo T.1.2"  to="/portal/reportes/t12" />
+              {(empresa.tipo_isp === "ISP_TV" || empresa.tipo_isp === "ISP_TV_MIXTO") && (
+                <Accion ic="📺" label="Nuevo F.7"  to="/portal/reportes/f7" />
+              )}
+              <Accion ic="📅" label="Calendario"   to="/portal/calendario" />
+              <Accion ic="🏢" label="Mi empresa"   to="/portal/empresa" />
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Gráfica + Actividad */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 260px",
-          gap: "10px",
-        }}
-      >
-        <div style={card}>
-          <span style={cardLabel}>Ingresos ISP vs FUTIC por trimestre</span>
-          <Grafica />
-        </div>
-
-        <div style={card}>
-          <span style={cardLabel}>Actividad reciente</span>
-          {ACTIVIDAD.map((a, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                gap: "8px",
-                padding: "7px 0",
-                borderBottom:
-                  i < ACTIVIDAD.length - 1
-                    ? `0.5px solid var(--border-card)`
-                    : "none",
-              }}
-            >
-              <div
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "7px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: a.bg,
-                  color: a.c,
-                  fontSize: "12px",
-                  flexShrink: 0,
-                }}
-              >
-                {a.ic}
-              </div>
-              <div>
-                <p
-                  style={{
-                    fontSize: "11px",
-                    color: "var(--text-primary)",
-                    fontWeight: "500",
-                  }}
-                >
-                  {a.t}
-                </p>
-                <p
-                  style={{
-                    fontSize: "9px",
-                    color: "var(--text-muted)",
-                    marginTop: "1px",
-                  }}
-                >
-                  {a.s}
-                </p>
-              </div>
-            </div>
-          ))}
-
-          <div
-            style={{
-              borderTop: `0.5px solid var(--border-card)`,
-              marginTop: "10px",
-              paddingTop: "10px",
-            }}
-          >
-            <span style={cardLabel}>Resumen trimestral</span>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "6px",
-              }}
-            >
+          {/* Resumen */}
+          <div style={card}>
+            <span style={cardLabel}>Resumen</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               {[
-                { label: "FUTIC total 2026", valor: "$796K", color: "#185FA5" },
-                { label: "TV compensación", valor: "$360K", color: "#185FA5" },
-                { label: "Reportes CRC", valor: "2", color: "#10b981" },
-                { label: "Reportes MinTIC", valor: "2", color: "#10b981" },
+                { label: "T.1.2 enviados", valor: reportesT12.length, color: "#185FA5" },
+                { label: "F.7 enviados",   valor: reportesF7.length,  color: "#10b981" },
+                { label: "Aprobados",      valor: resumen.reportes_aprobados, color: "#10b981" },
               ].map((s) => (
-                <div
-                  key={s.label}
-                  style={{
-                    background: "var(--bg-base)",
-                    borderRadius: "7px",
-                    padding: "6px 8px",
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: "9px",
-                      color: "var(--text-muted)",
-                      marginBottom: "3px",
-                    }}
-                  >
-                    {s.label}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      color: s.color,
-                    }}
-                  >
-                    {s.valor}
-                  </p>
+                <div key={s.label} style={{ background: "var(--bg-input)", borderRadius: "7px", padding: "6px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <p style={{ fontSize: "10px", color: "var(--text-muted)" }}>{s.label}</p>
+                  <p style={{ fontSize: "14px", fontWeight: "600", color: s.color }}>{s.valor}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 }
