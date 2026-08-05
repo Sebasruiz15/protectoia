@@ -6,7 +6,7 @@ export const EMPRESAS_MOCK = [
     nit:            "900.437.268-8",
     tipo_isp:       "ISP_TV",
     municipio:      "Amagá, Antioquia",
-    email:          "demo@iasystemgroup.co",
+    email:          "demo@gesco.co",
     rep_legal:      "Isabel Mercedes C. Descance",
     estado:         "activo",
     ultimo_reporte: "30 abr 2026",
